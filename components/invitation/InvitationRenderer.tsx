@@ -245,7 +245,9 @@ export function InvitationRenderer({
           />
         )
 
-      case 'events':
+      case 'events': {
+        const eventsList = (invitation.events || []).filter((e: any) => e && e.isVisible !== false)
+        if (eventsList.length === 0) return null
         return (
           <EventsSection
             key="events"
@@ -257,6 +259,7 @@ export function InvitationRenderer({
             isRtl={isRtl}
           />
         )
+      }
 
       case 'timeline':
         return (
