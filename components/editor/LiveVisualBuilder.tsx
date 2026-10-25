@@ -52,6 +52,11 @@ export function LiveVisualBuilder({
 }: LiveVisualBuilderProps) {
   const router = useRouter()
   const [invitation, setInvitation] = useState(initialInvitation)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccessNotice, setSaveSuccessNotice] = useState(false)
+  const [copyNotice, setCopyNotice] = useState(false)
+  const [isUploading, setIsUploading] = useState<string | null>(null)
 
   const effectiveSiteUrl =
     typeof window !== 'undefined' && window.location?.origin
@@ -82,11 +87,6 @@ export function LiveVisualBuilder({
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   // Editor layout mode: 'split' (side by side 640px), 'wide' (wide studio 960px), 'preview' (full preview)
   const [editorLayoutMode, setEditorLayoutMode] = useState<'split' | 'wide' | 'preview'>('split')
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState<string | null>(null)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [saveSuccessNotice, setSaveSuccessNotice] = useState(false)
-  const [copyNotice, setCopyNotice] = useState(false)
 
   // Audio preview for music library in dashboard
   const [previewTrackUrl, setPreviewTrackUrl] = useState<string | null>(null)
