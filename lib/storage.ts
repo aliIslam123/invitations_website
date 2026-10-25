@@ -40,22 +40,39 @@ export async function saveMediaFile(file: File, invitationId?: string): Promise<
   const cleanBaseName = file.name.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30)
   const filename = `${Date.now()}-${randomHex}-${cleanBaseName}${ext}`
 
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-  await fs.mkdir(uploadDir, { recursive: true })
+  try {
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+    await fs.mkdir(uploadDir, { recursive: true })
 
-  const filePath = path.join(uploadDir, filename)
-  await fs.writeFile(filePath, buffer)
+    const filePath = path.join(uploadDir, filename)
+    await fs.writeFile(filePath, buffer)
 
-  const url = `/uploads/${filename}`
-  const storageKey = `uploads/${filename}`
+    const url = `/uploads/${filename}`
+    const storageKey = `uploads/${filename}`
 
-  return {
-    url,
-    storageKey,
-    filename,
-    fileSize: file.size,
-    mimeType,
-    mediaType,
+    return {
+      url,
+      storageKey,
+      filename,
+      fileSize: file.size,
+      mimeType,
+      mediaType,
+    }
+  } catch (err) {
+    // Serverless fallback (e.g. Vercel read-only filesystem):
+    // Fall back to Data URL so uploads continue to function without external S3
+    console.warn('Filesystem is read-only or inaccessible; falling back to Data URL:', err)
+    const base64 = buffer.toString('base64')
+    const dataUrl = `data:${mimeType};base64,${base64}`
+
+    return {
+      url: dataUrl,
+      storageKey: `inline-${filename}`,
+      filename,
+      fileSize: file.size,
+      mimeType,
+      mediaType,
+    }
   }
 }
 
@@ -63,6 +80,9 @@ export async function saveMediaFile(file: File, invitationId?: string): Promise<
  * Delete a media file.
  */
 export async function deleteMediaFile(storageKey: string): Promise<boolean> {
+  if (storageKey.startsWith('inline-')) {
+    return true
+  }
   try {
     const fullPath = path.join(process.cwd(), 'public', storageKey)
     await fs.unlink(fullPath)

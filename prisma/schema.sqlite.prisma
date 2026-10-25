@@ -1,0 +1,371 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ─── USER / AUTH ──────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          String    @default("ADMIN") // "ADMIN" | "EDITOR"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  invitations WeddingInvitation[]
+  sessions    Session[]
+  accounts    Account[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ─── WEDDING INVITATION ───────────────────────────────────────────────────────
+
+model WeddingInvitation {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  status    String   @default("DRAFT") // "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  userId    String
+
+  // Basic info
+  title       String  @default("")
+  language    String  @default("ar")  // "ar" | "en" | "both"
+  direction   String  @default("rtl") // "rtl" | "ltr"
+
+  // Cover config
+  coverEnabled      Boolean @default(true)
+  coverType         String  @default("elegant") // "none" | "minimal" | "elegant" | "cinematic"
+  coverImage        String?
+  coverOverlayColor String  @default("#332A25")
+  coverOverlayOpacity Float @default(0.5)
+  coverMonogram     String?
+
+  // Theme
+  themeId         String  @default("royal-champagne")
+  themeCustom     String? // JSON string: custom theme color/font overrides
+
+  // Animation
+  animationPreset String  @default("elegant") // "subtle" | "elegant" | "cinematic"
+
+  // SEO & sharing
+  seoTitle        String?
+  seoDescription  String?
+  seoImage        String?
+  whatsappMessage String?
+
+  // Music
+  musicEnabled    Boolean @default(false)
+  musicUrl        String?
+  musicTitle      String?
+  musicAutoplay   Boolean @default(false)
+  musicPosition   String  @default("bottom-right")
+
+  // RSVP config
+  rsvpEnabled        Boolean   @default(false)
+  rsvpDeadline       DateTime?
+  rsvpMaxGuests      Int?
+  rsvpAllowPlusOne   Boolean   @default(true)
+  rsvpRequireContact Boolean   @default(false)
+  rsvpConfirmMsg     String?
+  rsvpDeclineMsg     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  couple        CoupleInformation?
+  events        WeddingEvent[]
+  gallery       GalleryImage[]
+  sections      InvitationSection[]
+  rsvpResponses RSVPResponse[]
+  mediaAssets   MediaAsset[]
+  timeline      TimelineItem[]
+
+  @@index([slug])
+  @@index([userId])
+  @@index([status])
+  @@map("wedding_invitations")
+}
+
+// ─── COUPLE INFORMATION ───────────────────────────────────────────────────────
+
+model CoupleInformation {
+  id           String @id @default(cuid())
+  invitationId String @unique
+
+  // Bride
+  brideFirstName   String  @default("")
+  brideLastName    String  @default("")
+  brideFullName    String  @default("")
+  brideFather      String?
+  brideMother      String?
+  brideFamily      String?
+  brideBio         String?
+  bridePhoto       String?
+
+  // Groom
+  groomFirstName   String  @default("")
+  groomLastName    String  @default("")
+  groomFullName    String  @default("")
+  groomFather      String?
+  groomMother      String?
+  groomFamily      String?
+  groomBio         String?
+  groomPhoto       String?
+
+  // Shared
+  couplePhoto      String?
+  monogram         String?
+  weddingDate      DateTime?
+  weddingTime      String?
+  timezone         String  @default("Asia/Riyadh")
+
+  // Message section
+  messageHeading    String?
+  messageBody       String?
+  messageFontFamily String?
+
+  // Hero section
+  heroLayout        String  @default("cinematic") // cinematic | editorial | minimal | floral | split | arabic
+  heroImage         String?
+  heroImageMobile   String?
+  heroVideo         String?
+
+  // Invitation text
+  invitationText    String?
+  invitationSubtext String?
+
+  // Family names section
+  familyNamesEnabled Boolean @default(false)
+  familyNamesContent String?
+
+  // Dress code
+  dressCodeEnabled Boolean @default(false)
+  dressCodeContent String?
+
+  // Gift info
+  giftInfoEnabled  Boolean @default(false)
+  giftInfoContent  String?
+
+  // Contact
+  contactEnabled   Boolean @default(false)
+  contactPhone     String?
+  contactWhatsapp  String?
+  contactEmail     String?
+
+  // Social
+  socialEnabled    Boolean @default(false)
+  socialLinks      String? // JSON string
+
+  // Custom sections
+  customSections   String? // JSON string
+
+  // Wishes
+  wishesEnabled    Boolean @default(false)
+
+  // Post-event
+  postEventEnabled Boolean @default(false)
+  postEventMessage String?
+  postEventImage   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitation WeddingInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@map("couple_information")
+}
+
+// ─── WEDDING EVENTS ───────────────────────────────────────────────────────────
+
+model WeddingEvent {
+  id           String @id @default(cuid())
+  invitationId String
+
+  title        String
+  date         DateTime
+  startTime    String?
+  endTime      String?
+  timezone     String  @default("Asia/Riyadh")
+  venueName    String?
+  address      String?
+  mapsUrl      String?
+  latitude     Float?
+  longitude    Float?
+  venueImage   String?
+  description  String?
+  dressCode    String?
+  notes        String?
+  displayOrder Int     @default(0)
+  isVisible    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitation WeddingInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@map("wedding_events")
+}
+
+// ─── GALLERY ──────────────────────────────────────────────────────────────────
+
+model GalleryImage {
+  id           String @id @default(cuid())
+  invitationId String
+
+  url          String
+  thumbnailUrl String?
+  caption      String?
+  altText      String?
+  displayOrder Int     @default(0)
+  isVisible    Boolean @default(true)
+  width        Int?
+  height       Int?
+  fileSize     Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitation WeddingInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@map("gallery_images")
+}
+
+// ─── INVITATION SECTIONS ──────────────────────────────────────────────────────
+
+model InvitationSection {
+  id           String @id @default(cuid())
+  invitationId String
+
+  sectionKey   String  // e.g. "hero" | "message" | "countdown" | "events" | "gallery" | "timeline" | "rsvp"
+  displayOrder Int     @default(0)
+  isVisible    Boolean @default(true)
+  layout       String? // layout variant identifier
+  settings     String? // JSON string for section-specific styling/options
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitation WeddingInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@unique([invitationId, sectionKey])
+  @@index([invitationId])
+  @@map("invitation_sections")
+}
+
+// ─── TIMELINE ─────────────────────────────────────────────────────────────────
+
+model TimelineItem {
+  id           String @id @default(cuid())
+  invitationId String
+
+  time         String?
+  title        String
+  description  String?
+  icon         String?
+  displayOrder Int     @default(0)
+  isVisible    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitation WeddingInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@map("timeline_items")
+}
+
+// ─── RSVP ─────────────────────────────────────────────────────────────────────
+
+model RSVPResponse {
+  id           String @id @default(cuid())
+  invitationId String
+
+  guestName    String
+  attendance   String  // "yes" | "no" | "maybe"
+  guestCount   Int     @default(1)
+  phone        String?
+  email        String?
+  message      String?
+  dietary      String?
+  ipAddress    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitation WeddingInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@map("rsvp_responses")
+}
+
+// ─── MEDIA ASSETS ─────────────────────────────────────────────────────────────
+
+model MediaAsset {
+  id           String @id @default(cuid())
+  invitationId String?
+
+  filename     String
+  originalName String
+  mimeType     String
+  fileSize     Int
+  url          String
+  storageKey   String  @unique
+  mediaType    String  // "image" | "audio" | "video"
+  width        Int?
+  height       Int?
+  duration     Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitation WeddingInvitation? @relation(fields: [invitationId], references: [id], onDelete: SetNull)
+
+  @@index([invitationId])
+  @@map("media_assets")
+}

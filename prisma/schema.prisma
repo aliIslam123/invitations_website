@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ─── USER / AUTH ──────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ model User {
   emailVerified DateTime?
   image         String?
   passwordHash  String?
-  role          String    @default("ADMIN") // "ADMIN" | "EDITOR"
+  role          String    @default("ADMIN")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -67,43 +67,36 @@ model Session {
 model WeddingInvitation {
   id        String   @id @default(cuid())
   slug      String   @unique
-  status    String   @default("DRAFT") // "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  status    String   @default("DRAFT")
   userId    String
 
-  // Basic info
   title       String  @default("")
-  language    String  @default("ar")  // "ar" | "en" | "both"
-  direction   String  @default("rtl") // "rtl" | "ltr"
+  language    String  @default("ar")
+  direction   String  @default("rtl")
 
-  // Cover config
-  coverEnabled      Boolean @default(true)
-  coverType         String  @default("elegant") // "none" | "minimal" | "elegant" | "cinematic"
-  coverImage        String?
-  coverOverlayColor String  @default("#332A25")
-  coverOverlayOpacity Float @default(0.5)
-  coverMonogram     String?
+  coverEnabled        Boolean @default(true)
+  coverType           String  @default("elegant")
+  coverImage          String?
+  coverOverlayColor   String  @default("#332A25")
+  coverOverlayOpacity Float   @default(0.5)
+  coverMonogram       String?
 
-  // Theme
   themeId         String  @default("royal-champagne")
-  themeCustom     String? // JSON string: custom theme color/font overrides
+  themeCustom     String?
 
-  // Animation
-  animationPreset String  @default("elegant") // "subtle" | "elegant" | "cinematic"
+  animationPreset String  @default("elegant")
 
-  // SEO & sharing
   seoTitle        String?
   seoDescription  String?
   seoImage        String?
   whatsappMessage String?
 
-  // Music
   musicEnabled    Boolean @default(false)
   musicUrl        String?
   musicTitle      String?
   musicAutoplay   Boolean @default(false)
   musicPosition   String  @default("bottom-right")
 
-  // RSVP config
   rsvpEnabled        Boolean   @default(false)
   rsvpDeadline       DateTime?
   rsvpMaxGuests      Int?
@@ -136,7 +129,6 @@ model CoupleInformation {
   id           String @id @default(cuid())
   invitationId String @unique
 
-  // Bride
   brideFirstName   String  @default("")
   brideLastName    String  @default("")
   brideFullName    String  @default("")
@@ -146,7 +138,6 @@ model CoupleInformation {
   brideBio         String?
   bridePhoto       String?
 
-  // Groom
   groomFirstName   String  @default("")
   groomLastName    String  @default("")
   groomFullName    String  @default("")
@@ -156,57 +147,44 @@ model CoupleInformation {
   groomBio         String?
   groomPhoto       String?
 
-  // Shared
   couplePhoto      String?
   monogram         String?
   weddingDate      DateTime?
   weddingTime      String?
   timezone         String  @default("Asia/Riyadh")
 
-  // Message section
   messageHeading    String?
   messageBody       String?
   messageFontFamily String?
 
-  // Hero section
-  heroLayout        String  @default("cinematic") // cinematic | editorial | minimal | floral | split | arabic
+  heroLayout        String  @default("cinematic")
   heroImage         String?
   heroImageMobile   String?
   heroVideo         String?
 
-  // Invitation text
   invitationText    String?
   invitationSubtext String?
 
-  // Family names section
   familyNamesEnabled Boolean @default(false)
   familyNamesContent String?
 
-  // Dress code
   dressCodeEnabled Boolean @default(false)
   dressCodeContent String?
 
-  // Gift info
   giftInfoEnabled  Boolean @default(false)
   giftInfoContent  String?
 
-  // Contact
   contactEnabled   Boolean @default(false)
   contactPhone     String?
   contactWhatsapp  String?
   contactEmail     String?
 
-  // Social
   socialEnabled    Boolean @default(false)
-  socialLinks      String? // JSON string
+  socialLinks      String?
 
-  // Custom sections
-  customSections   String? // JSON string
-
-  // Wishes
+  customSections   String?
   wishesEnabled    Boolean @default(false)
 
-  // Post-event
   postEventEnabled Boolean @default(false)
   postEventMessage String?
   postEventImage   String?
@@ -282,11 +260,11 @@ model InvitationSection {
   id           String @id @default(cuid())
   invitationId String
 
-  sectionKey   String  // e.g. "hero" | "message" | "countdown" | "events" | "gallery" | "timeline" | "rsvp"
+  sectionKey   String
   displayOrder Int     @default(0)
   isVisible    Boolean @default(true)
-  layout       String? // layout variant identifier
-  settings     String? // JSON string for section-specific styling/options
+  layout       String?
+  settings     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -327,7 +305,7 @@ model RSVPResponse {
   invitationId String
 
   guestName    String
-  attendance   String  // "yes" | "no" | "maybe"
+  attendance   String
   guestCount   Int     @default(1)
   phone        String?
   email        String?
@@ -356,7 +334,7 @@ model MediaAsset {
   fileSize     Int
   url          String
   storageKey   String  @unique
-  mediaType    String  // "image" | "audio" | "video"
+  mediaType    String
   width        Int?
   height       Int?
   duration     Float?
