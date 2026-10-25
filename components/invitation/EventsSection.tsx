@@ -24,6 +24,7 @@ export interface EventItem {
   notes?: string | null
   isVisible: boolean
   showLocationCard?: boolean
+  showDressCode?: boolean
 }
 
 interface EventsSectionProps {
@@ -180,7 +181,7 @@ export function EventsSection({
                     )}
 
                     {/* Dress Code Tag */}
-                    {event.dressCode && (
+                    {event.dressCode && event.showDressCode !== false && !event.notes?.includes('hideDressCode') && (
                       <div
                         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium mb-4"
                         style={{
@@ -196,7 +197,7 @@ export function EventsSection({
                     {/* Location Card: Venue, Address & Google Maps Navigation */}
                     {showLocationCard !== false &&
                       event.showLocationCard !== false &&
-                      event.notes !== 'hideLocation' &&
+                      !event.notes?.includes('hideLocation') &&
                       (event.venueName || event.address || destinationUrl) && (
                       <div
                         className="my-4 p-4 rounded border space-y-3 shadow-xs"

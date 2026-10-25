@@ -42,6 +42,7 @@ import {
   Scissors,
   MapPin,
   Navigation,
+  Shirt,
 } from 'lucide-react'
 import { InvitationRenderer } from '@/components/invitation/InvitationRenderer'
 import { WeddingCalendarCard } from '@/components/invitation/WeddingCalendarCard'
@@ -352,6 +353,7 @@ export function LiveVisualBuilder({
       mapsUrl: 'https://maps.google.com/?q=Laylaty+Hall+Jeddah',
       description: 'نستقبلكم بكل حب وترحاب لمشاركتنا ليلة العمر ومأدبة العشاء الفاخرة.',
       dressCode: 'الزي السعودي الرسمي / فساتين السهرة الراقية',
+      showDressCode: true,
       displayOrder: (invitation.events || []).length,
       isVisible: true,
     }
@@ -1331,6 +1333,76 @@ export function LiveVisualBuilder({
                       placeholder="يتشرف فلان وفلان بدعوتكم لحضور حفل زفاف كريمتهما..."
                       className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
                     />
+                  )}
+                </div>
+
+                {/* Dress Code Section (قواعد الزي الرسمي) */}
+                <div className="p-4 bg-white border-2 border-[#C8A96B]/40 rounded-lg space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Shirt className="w-4 h-4 text-[#C8A96B]" />
+                      <span className="text-xs font-bold text-[#332A25]">
+                        قواعد الزي الرسمي (Dress Code):
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateCoupleField('dressCodeEnabled', !invitation.couple?.dressCodeEnabled)}
+                      className={`px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer border flex items-center gap-1.5 ${
+                        invitation.couple?.dressCodeEnabled
+                          ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/40 shadow-xs'
+                          : 'bg-red-50 text-red-600 border-red-200'
+                      }`}
+                    >
+                      {invitation.couple?.dressCodeEnabled ? (
+                        <>
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>معروضة في الدعوة</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" />
+                          <span>مخفية من الدعوة</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#918579]">
+                    تحدد للضيوف نوع الملابس المفضلة لحفل الزفاف (مثل: بدلة كاملة وسواريه، زي رسمي كامل، إلخ). يمكنك إظهارها أو إخفاؤها بضغطة زر.
+                  </p>
+
+                  {invitation.couple?.dressCodeEnabled && (
+                    <div className="space-y-2 pt-1 border-t border-[#EAE1D3]">
+                      <label className="block text-[11px] font-semibold text-[#332A25]">
+                        نص قواعد الزي الرسمي:
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={invitation.couple?.dressCodeContent || ''}
+                        onChange={(e) => updateCoupleField('dressCodeContent', e.target.value)}
+                        placeholder="مثال: نرجو التكرم بالالتزام بالزي الرسمي الكامل (بدلة كاملة للرجال، فساتين سواريه للسيدات)..."
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]"
+                      />
+                      {/* Presets */}
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        <span className="text-[10px] text-[#918579] self-center">اقتراحات سريعة:</span>
+                        {[
+                          'الزي الرسمي الكامل (Black Tie)',
+                          'بدلة كاملة وفساتين سهرة راقية',
+                          'زي أنيق ومحتشم',
+                          'ملابس كلاسيكية أنيقة',
+                        ].map((presetText) => (
+                          <button
+                            key={presetText}
+                            type="button"
+                            onClick={() => updateCoupleField('dressCodeContent', presetText)}
+                            className="px-2 py-0.5 text-[10px] bg-white border border-[#EAE1D3] hover:border-[#C8A96B] hover:text-[#C8A96B] rounded transition-colors cursor-pointer"
+                          >
+                            + {presetText}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -2712,6 +2784,60 @@ export function LiveVisualBuilder({
                             placeholder="https://maps.app.goo.gl/... أو https://maps.google.com/?q=..."
                             className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-mono text-left"
                             dir="ltr"
+                          />
+                        </div>
+
+                        {/* Dress Code for Event */}
+                        <div className="p-3 bg-[#FAF7F0] rounded border border-[#EAE1D3] space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Shirt className="w-3.5 h-3.5 text-[#C8A96B]" />
+                              <span className="text-[11px] font-bold text-[#332A25]">
+                                الزي الرسمي للفعالية (Dress Code):
+                              </span>
+                            </div>
+                            {(() => {
+                              const isEvDressCodeVisible = ev.showDressCode !== false && !ev.notes?.includes('hideDressCode')
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nextVisible = !isEvDressCodeVisible
+                                    const list = [...(invitation.events || [])]
+                                    let notesStr = (ev.notes || '').split(',').filter((f: string) => f && f !== 'hideDressCode').join(',')
+                                    if (!nextVisible) {
+                                      notesStr = notesStr ? `${notesStr},hideDressCode` : 'hideDressCode'
+                                    }
+                                    list[idx] = { ...list[idx], showDressCode: nextVisible, notes: notesStr || null }
+                                    updateInvitationField('events', list)
+                                  }}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer border flex items-center gap-1 ${
+                                    isEvDressCodeVisible
+                                      ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/30'
+                                      : 'bg-red-50 text-red-600 border-red-200'
+                                  }`}
+                                >
+                                  {isEvDressCodeVisible ? (
+                                    <>
+                                      <Eye className="w-3 h-3" />
+                                      <span>معروض</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <EyeOff className="w-3 h-3" />
+                                      <span>مخفي</span>
+                                    </>
+                                  )}
+                                </button>
+                              )
+                            })()}
+                          </div>
+                          <input
+                            type="text"
+                            value={ev.dressCode || ''}
+                            onChange={(e) => updateEventField(idx, 'dressCode', e.target.value)}
+                            placeholder="مثال: بدلة رسمية / فستان سهرة"
+                            className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
                           />
                         </div>
 

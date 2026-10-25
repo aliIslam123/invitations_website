@@ -249,7 +249,14 @@ export async function PUT(
             venueImage: ev.venueImage || null,
             description: ev.description || null,
             dressCode: ev.dressCode || null,
-            notes: ev.showLocationCard === false ? 'hideLocation' : (ev.notes || null),
+            notes: (() => {
+              const flags = []
+              if (ev.showLocationCard === false) flags.push('hideLocation')
+              if (ev.showDressCode === false) flags.push('hideDressCode')
+              const baseNotes = (ev.notes || '').split(',').filter((f: string) => f && f !== 'hideLocation' && f !== 'hideDressCode')
+              const combined = [...flags, ...baseNotes]
+              return combined.length > 0 ? combined.join(',') : null
+            })(),
             displayOrder: idx,
             isVisible: ev.isVisible ?? true,
           },
