@@ -20,6 +20,9 @@ import { WEDDING_MUSIC_PRESETS, MusicTrack } from '@/lib/musicPresets'
 interface MusicPlayerProps {
   musicUrl?: string | null
   musicTitle?: string | null
+  musicStart?: number | null
+  musicEnd?: number | null
+  musicTrimEnabled?: boolean
   theme: ThemeConfig
   position?: string
   isRtl?: boolean
@@ -29,6 +32,9 @@ interface MusicPlayerProps {
 export function MusicPlayer({
   musicUrl,
   musicTitle,
+  musicStart,
+  musicEnd,
+  musicTrimEnabled = false,
   theme,
   position = 'bottom-right',
   isRtl = true,
@@ -86,6 +92,12 @@ export function MusicPlayer({
   // Play audio safely with catch for browser policies
   const playAudio = useCallback(() => {
     if (!audioRef.current) return
+    if (musicTrimEnabled && currentTrackIndex === 0 && typeof musicStart === 'number' && musicStart > 0) {
+      const cur = audioRef.current.currentTime
+      if (cur < musicStart || (typeof musicEnd === 'number' && musicEnd > musicStart && cur >= musicEnd)) {
+        audioRef.current.currentTime = musicStart
+      }
+    }
     audioRef.current
       .play()
       .then(() => {
@@ -96,7 +108,29 @@ export function MusicPlayer({
         console.warn('Audio play prevented by browser policy:', err)
         setIsPlaying(false)
       })
-  }, [])
+  }, [musicTrimEnabled, musicStart, musicEnd, currentTrackIndex])
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current) return
+    if (musicTrimEnabled && currentTrackIndex === 0) {
+      const cur = audioRef.current.currentTime
+      const start = typeof musicStart === 'number' && musicStart >= 0 ? musicStart : 0
+      const end = typeof musicEnd === 'number' && musicEnd > start ? musicEnd : null
+
+      if (end && cur >= end) {
+        audioRef.current.currentTime = start
+      } else if (cur < start - 0.5) {
+        audioRef.current.currentTime = start
+      }
+    }
+  }
+
+  const handleLoadedMetadata = () => {
+    if (!audioRef.current) return
+    if (musicTrimEnabled && currentTrackIndex === 0 && typeof musicStart === 'number' && musicStart > 0) {
+      audioRef.current.currentTime = musicStart
+    }
+  }
 
   // Auto-start trigger when visitor clicks "Open Invitation"
   useEffect(() => {
@@ -117,7 +151,8 @@ export function MusicPlayer({
     // Wait for state to change and start new track
     setTimeout(() => {
       if (audioRef.current) {
-        audioRef.current.currentTime = 0
+        const start = musicTrimEnabled && index === 0 && typeof musicStart === 'number' ? musicStart : 0
+        audioRef.current.currentTime = start
         playAudio()
       }
     }, 100)
@@ -187,7 +222,18 @@ export function MusicPlayer({
         src={activeTrack.url}
         loop
         preload="auto"
-        onEnded={() => setIsPlaying(false)}
+        onLoadedMetadata={handleLoadedMetadata}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={() => {
+          if (musicTrimEnabled && currentTrackIndex === 0) {
+            if (audioRef.current) {
+              audioRef.current.currentTime = musicStart || 0
+              audioRef.current.play().catch(() => {})
+            }
+          } else {
+            setIsPlaying(false)
+          }
+        }}
       />
 
       {/* Main floating pill */}

@@ -23,12 +23,14 @@ export interface EventItem {
   dressCode?: string | null
   notes?: string | null
   isVisible: boolean
+  showLocationCard?: boolean
 }
 
 interface EventsSectionProps {
   events: EventItem[]
   sectionTitle?: string | null
   sectionSubtitle?: string | null
+  showLocationCard?: boolean
   theme: ThemeConfig
   preset?: AnimationPreset
   isRtl?: boolean
@@ -38,6 +40,7 @@ export function EventsSection({
   events,
   sectionTitle,
   sectionSubtitle,
+  showLocationCard = true,
   theme,
   preset = 'elegant',
   isRtl = true,
@@ -169,21 +172,6 @@ export function EventsSection({
                       </div>
                     )}
 
-                    {/* Venue & Address */}
-                    {(event.venueName || event.address) && (
-                      <div className="flex items-start gap-2.5 mb-4 text-sm" style={{ color: theme.colors.text }}>
-                        <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.colors.primary }} />
-                        <div>
-                          {event.venueName && <p className="font-semibold text-base">{event.venueName}</p>}
-                          {event.address && (
-                            <p className="text-xs opacity-85 mt-1 whitespace-pre-line leading-relaxed" style={{ color: theme.colors.textLight }}>
-                              {event.address}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
                     {/* Description */}
                     {event.description && (
                       <p className="text-xs md:text-sm leading-relaxed mb-4" style={{ color: theme.colors.textLight }}>
@@ -204,55 +192,90 @@ export function EventsSection({
                         <span>{event.dressCode}</span>
                       </div>
                     )}
-                  </div>
 
-                  {/* Actions Bar */}
-                  <div className="pt-4 border-t mt-4 flex flex-wrap items-center gap-3" style={{ borderColor: theme.colors.border }}>
-                    {/* Outbound Google Maps Navigation */}
-                    <a
-                      href={destinationUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm text-xs font-semibold uppercase tracking-wider transition-all duration-200 shadow-sm hover:opacity-90 cursor-pointer"
-                      style={{
-                        backgroundColor: theme.colors.primary,
-                        color: '#FFFFFF',
-                      }}
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      <span>{isRtl ? 'الاتجاهات عبر Google Maps' : 'Open in Google Maps'}</span>
-                      <ExternalLink className="w-3 h-3 opacity-80" />
-                    </a>
+                    {/* Location Card: Venue, Address & Google Maps Navigation */}
+                    {showLocationCard !== false &&
+                      event.showLocationCard !== false &&
+                      event.notes !== 'hideLocation' &&
+                      (event.venueName || event.address || destinationUrl) && (
+                      <div
+                        className="my-4 p-4 rounded border space-y-3 shadow-xs"
+                        style={{
+                          backgroundColor: `${theme.colors.primary}0a`,
+                          borderColor: `${theme.colors.primary}30`,
+                        }}
+                      >
+                        {/* Venue & Address (اللوكيشن مكتوب) */}
+                        {(event.venueName || event.address) && (
+                          <div className="flex items-start gap-2.5 text-sm" style={{ color: theme.colors.text }}>
+                            <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.colors.primary }} />
+                            <div className="flex-1">
+                              {event.venueName && <p className="font-bold text-base">{event.venueName}</p>}
+                              {event.address && (
+                                <p className="text-xs opacity-90 mt-1 whitespace-pre-line leading-relaxed" style={{ color: theme.colors.textLight }}>
+                                  {event.address}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
-                    {/* Embedded Map Toggle (Click to preview without page leave) */}
-                    <button
-                      type="button"
-                      onClick={() => setActiveMapId(isMapOpen ? null : event.id)}
-                      className="px-3 py-2.5 rounded-sm border text-xs font-medium transition-colors hover:bg-black/5 cursor-pointer"
-                      style={{
-                        borderColor: theme.colors.border,
-                        color: theme.colors.text,
-                      }}
-                    >
-                      {isMapOpen ? (isRtl ? 'إخفاء الخريطة' : 'Hide Map') : (isRtl ? 'معاينة' : 'Preview')}
-                    </button>
+                        {/* Location Link & Map Actions (اللوكيشن كـ لينك) */}
+                        {destinationUrl && (
+                          <div className="pt-3 border-t flex flex-wrap items-center gap-2" style={{ borderColor: `${theme.colors.primary}20` }}>
+                            {/* Outbound Google Maps Navigation */}
+                            <a
+                              href={destinationUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wider transition-all duration-200 shadow-xs hover:opacity-90 cursor-pointer"
+                              style={{
+                                backgroundColor: theme.colors.primary,
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              <Navigation className="w-3.5 h-3.5" />
+                              <span>{isRtl ? 'فتح اللوكيشن في خرائط جوجل' : 'Open in Google Maps'}</span>
+                              <ExternalLink className="w-3 h-3 opacity-80" />
+                            </a>
+
+                            {/* Embedded Map Toggle */}
+                            <button
+                              type="button"
+                              onClick={() => setActiveMapId(isMapOpen ? null : event.id)}
+                              className="px-3 py-2 rounded-sm border text-xs font-medium transition-colors hover:bg-black/5 cursor-pointer"
+                              style={{
+                                borderColor: theme.colors.border,
+                                color: theme.colors.text,
+                              }}
+                            >
+                              {isMapOpen ? (isRtl ? 'إخفاء الخريطة' : 'Hide Map') : (isRtl ? 'معاينة الخريطة' : 'Preview Map')}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Embedded Map Container */}
+                        {isMapOpen && (
+                          <div className="h-60 w-full rounded overflow-hidden border mt-2" style={{ borderColor: theme.colors.border }}>
+                            <iframe
+                              title={`خريطة ${event.venueName || event.title}`}
+                              width="100%"
+                              height="100%"
+                              frameBorder="0"
+                              scrolling="no"
+                              marginHeight={0}
+                              marginWidth={0}
+                              src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                                [event.venueName, event.address].filter(Boolean).join(' ') || 'Cairo'
+                              )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                              className="w-full h-full"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* Embedded Map Container (Only loaded on user demand) */}
-                {isMapOpen && (
-                  <div className="h-64 w-full border-t" style={{ borderColor: theme.colors.border }}>
-                    <iframe
-                      title={`خريطة ${event.venueName || event.title}`}
-                      width="100%"
-                      height="100%"
-                      frameBorder="0"
-                      scrolling="no"
-                      marginHeight={0}
-                      marginWidth={0}
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                        [event.venueName, event.address].filter(Boolean).join(' ') || 'Riyadh'
-                      )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                       className="w-full h-full"
                     />
                   </div>

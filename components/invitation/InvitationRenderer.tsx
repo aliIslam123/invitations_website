@@ -73,6 +73,10 @@ export function InvitationRenderer({
   let floralEffect: FloralEffectType = 'romantic'
   let autoScrollEnabled = true
   let calendarEnabled = true
+  let showLocationCard = true
+  let musicTrimEnabled = false
+  let musicStart: number | null = null
+  let musicEnd: number | null = null
 
   if (invitation.themeCustom) {
     try {
@@ -93,6 +97,18 @@ export function InvitationRenderer({
       }
       if (custom.calendarEnabled !== undefined) {
         calendarEnabled = custom.calendarEnabled
+      }
+      if (custom.showLocationCard !== undefined) {
+        showLocationCard = custom.showLocationCard
+      }
+      if (custom.musicTrimEnabled !== undefined) {
+        musicTrimEnabled = custom.musicTrimEnabled
+      }
+      if (custom.musicStart !== undefined && custom.musicStart !== null) {
+        musicStart = Number(custom.musicStart)
+      }
+      if (custom.musicEnd !== undefined && custom.musicEnd !== null) {
+        musicEnd = Number(custom.musicEnd)
       }
     } catch {
       // Keep base theme if custom parsing fails
@@ -254,6 +270,7 @@ export function InvitationRenderer({
             events={invitation.events || []}
             sectionTitle={couple.eventsTitle || (invitation as any).eventsTitle}
             sectionSubtitle={couple.eventsSubtitle || (invitation as any).eventsSubtitle}
+            showLocationCard={showLocationCard}
             theme={theme}
             preset={preset}
             isRtl={isRtl}
@@ -370,6 +387,9 @@ export function InvitationRenderer({
         <MusicPlayer
           musicUrl={invitation.musicUrl}
           musicTitle={invitation.musicTitle}
+          musicStart={musicTrimEnabled ? musicStart : null}
+          musicEnd={musicTrimEnabled ? musicEnd : null}
+          musicTrimEnabled={musicTrimEnabled}
           theme={theme}
           position={invitation.musicPosition}
           isRtl={isRtl}

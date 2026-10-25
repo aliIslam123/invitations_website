@@ -39,6 +39,9 @@ import {
   Utensils,
   Cake,
   Camera,
+  Scissors,
+  MapPin,
+  Navigation,
 } from 'lucide-react'
 import { InvitationRenderer } from '@/components/invitation/InvitationRenderer'
 import { WeddingCalendarCard } from '@/components/invitation/WeddingCalendarCard'
@@ -99,6 +102,28 @@ export function LiveVisualBuilder({
   const [previewTrackUrl, setPreviewTrackUrl] = useState<string | null>(null)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
   const previewAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Audio Trimmer preview states
+  const [audioDuration, setAudioDuration] = useState<number>(0)
+  const [audioCurrentTime, setAudioCurrentTime] = useState<number>(0)
+  const [isTrimPreviewPlaying, setIsTrimPreviewPlaying] = useState<boolean>(false)
+
+  const formatSecondsToMMSS = (seconds: number) => {
+    if (isNaN(seconds) || seconds < 0) return '00:00'
+    const m = Math.floor(seconds / 60)
+    const s = Math.floor(seconds % 60)
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
+  const parseMMSSToSeconds = (text: string) => {
+    if (!text) return 0
+    const parts = text.split(':').map((p) => parseInt(p.trim(), 10))
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      return Math.max(0, parts[0] * 60 + parts[1])
+    }
+    const val = parseFloat(text)
+    return isNaN(val) ? 0 : Math.max(0, val)
+  }
 
   // New photo input state
   const [newPhotoUrl, setNewPhotoUrl] = useState('')
@@ -476,11 +501,14 @@ export function LiveVisualBuilder({
     if (previewTrackUrl === url && isPreviewPlaying) {
       previewAudioRef.current?.pause()
       setIsPreviewPlaying(false)
+      setIsTrimPreviewPlaying(false)
     } else {
       setPreviewTrackUrl(url)
       setIsPreviewPlaying(true)
+      setIsTrimPreviewPlaying(false)
       if (previewAudioRef.current) {
         previewAudioRef.current.src = url
+        previewAudioRef.current.currentTime = 0
         previewAudioRef.current.play().catch(() => setIsPreviewPlaying(false))
       }
     }
@@ -509,10 +537,33 @@ export function LiveVisualBuilder({
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7F0] font-arabic-luxury text-[#332A25]">
-      {/* Hidden audio element for dashboard track previews */}
+      {/* Hidden audio element for dashboard track previews & trimmer */}
       <audio
         ref={previewAudioRef}
-        onEnded={() => setIsPreviewPlaying(false)}
+        onLoadedMetadata={(e) => {
+          const d = e.currentTarget.duration || 0
+          setAudioDuration(d)
+          if (!getThemeCustomVal('musicEnd', null) && d > 0) {
+            updateThemeCustomField('musicEnd', Math.round(d))
+          }
+        }}
+        onTimeUpdate={(e) => {
+          const cur = e.currentTarget.currentTime
+          setAudioCurrentTime(cur)
+          if (isTrimPreviewPlaying) {
+            const startSec = getThemeCustomVal('musicStart', 0)
+            const endSec = getThemeCustomVal('musicEnd', audioDuration || 60)
+            if (cur >= endSec) {
+              if (previewAudioRef.current) {
+                previewAudioRef.current.currentTime = startSec
+              }
+            }
+          }
+        }}
+        onEnded={() => {
+          setIsPreviewPlaying(false)
+          setIsTrimPreviewPlaying(false)
+        }}
       />
 
       {/* Top Header / Builder Toolbar */}
@@ -899,6 +950,162 @@ export function LiveVisualBuilder({
                           />
                         </div>
                       )}
+                  </div>
+                </div>
+
+                {/* Primary Wedding Location Box (اللوكيشن كـ لينك واللوكيشن مكتوب وإمكانية الإظهار والإخفاء) */}
+                <div className="p-4 bg-white rounded-lg border border-[#EAE1D3] space-y-3.5 shadow-xs">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-[#EAE1D3]">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                        getThemeCustomVal('showLocationCard', true) ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        <MapPin className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h5 className="text-xs font-bold text-[#332A25]">
+                          موقع ومكان الحفل (اللوكيشن والخريطة)
+                        </h5>
+                        <p className="text-[10px] text-[#918579]">
+                          {getThemeCustomVal('showLocationCard', true)
+                            ? 'كرت اللوكيشن معروض للضيوف مع رابط الاتجاهات'
+                            : 'كرت اللوكيشن مخفي بالكامل من صفحة الدعوة'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Toggle show/hide location card */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateThemeCustomField('showLocationCard', !getThemeCustomVal('showLocationCard', true))
+                      }
+                      className={`px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        getThemeCustomVal('showLocationCard', true)
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                          : 'bg-gray-200 text-gray-600 border border-gray-300 hover:bg-gray-300'
+                      }`}
+                      title={getThemeCustomVal('showLocationCard', true) ? 'اضغط لإخفاء كرت اللوكيشن' : 'اضغط لإظهار كرت اللوكيشن'}
+                    >
+                      {getThemeCustomVal('showLocationCard', true) ? (
+                        <>
+                          <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>معروض بالدعوة</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5 text-gray-500" />
+                          <span>مخفي</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Location Inputs */}
+                  <div className="space-y-2.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#332A25] mb-1">
+                        📍 اللوكيشن مكتوب (اسم القاعة / الفندق / المكان)
+                      </label>
+                      <input
+                        type="text"
+                        value={invitation.events?.[0]?.venueName || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const events = [...(invitation.events || [])]
+                          if (events.length === 0) {
+                            events.push({
+                              id: `ev-${Date.now()}`,
+                              title: 'حفل الزفاف',
+                              venueName: val,
+                              date: invitation.couple?.weddingDate || new Date().toISOString(),
+                              startTime: invitation.couple?.weddingTime || '08:00 مساءً',
+                              isVisible: true,
+                              displayOrder: 0,
+                            })
+                          } else {
+                            events[0] = { ...events[0], venueName: val }
+                          }
+                          updateInvitationField('events', events)
+                        }}
+                        placeholder="مثال: قاعة ليلتي للاحتفالات - نادي اتحاد الشرطة"
+                        className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-[#FAF7F0] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#332A25] mb-1">
+                        📝 اللوكيشن مكتوب بالتفصيل (العنوان / الشارع / المعلم)
+                      </label>
+                      <input
+                        type="text"
+                        value={invitation.events?.[0]?.address || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const events = [...(invitation.events || [])]
+                          if (events.length === 0) {
+                            events.push({
+                              id: `ev-${Date.now()}`,
+                              title: 'حفل الزفاف',
+                              address: val,
+                              date: invitation.couple?.weddingDate || new Date().toISOString(),
+                              startTime: invitation.couple?.weddingTime || '08:00 مساءً',
+                              isVisible: true,
+                              displayOrder: 0,
+                            })
+                          } else {
+                            events[0] = { ...events[0], address: val }
+                          }
+                          updateInvitationField('events', events)
+                        }}
+                        placeholder="مثال: شارع صلاح سالم، خلف مسجد الشرطة، القاهرة"
+                        className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-[#FAF7F0]"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-[#332A25]">
+                          🔗 اللوكيشن كـ لينك (رابط Google Maps)
+                        </label>
+                        {invitation.events?.[0]?.mapsUrl && (
+                          <a
+                            href={invitation.events[0].mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-[#C8A96B] hover:underline flex items-center gap-1 font-semibold"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span>فتح الرابط للتأكد منه</span>
+                          </a>
+                        )}
+                      </div>
+                      <input
+                        type="url"
+                        value={invitation.events?.[0]?.mapsUrl || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const events = [...(invitation.events || [])]
+                          if (events.length === 0) {
+                            events.push({
+                              id: `ev-${Date.now()}`,
+                              title: 'حفل الزفاف',
+                              mapsUrl: val,
+                              date: invitation.couple?.weddingDate || new Date().toISOString(),
+                              startTime: invitation.couple?.weddingTime || '08:00 مساءً',
+                              isVisible: true,
+                              displayOrder: 0,
+                            })
+                          } else {
+                            events[0] = { ...events[0], mapsUrl: val }
+                          }
+                          updateInvitationField('events', events)
+                        }}
+                        placeholder="https://maps.app.goo.gl/... أو https://maps.google.com/?q=..."
+                        className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-[#FAF7F0] font-mono text-left"
+                        dir="ltr"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1626,6 +1833,318 @@ export function LiveVisualBuilder({
                       )}
                     </div>
 
+                    {/* Audio Trimmer & Segment Selector (اقتطاع وتحديد جزء من المقطع الصوتي) */}
+                    {invitation.musicUrl && (
+                      <div className="p-4 bg-gradient-to-br from-[#FAF7F0] to-white border border-[#C8A96B]/50 rounded-lg space-y-4 shadow-xs">
+                        <div className="flex items-center justify-between pb-3 border-b border-[#EAE1D3]">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-[#C8A96B]/15 text-[#C8A96B] flex items-center justify-center">
+                              <Scissors className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-bold text-[#332A25]">
+                                اقتطاع وتحديد جزء من المقطع الصوتي (Audio Trimmer)
+                              </h5>
+                              <p className="text-[10px] text-[#918579]">
+                                حدد ثواني أو دقائق البداية والنهاية ليتم تشغيل هذا الجزء فقط للضيوف
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Toggle Switch */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextVal = !getThemeCustomVal('musicTrimEnabled', false)
+                              updateThemeCustomField('musicTrimEnabled', nextVal)
+                              if (nextVal && !getThemeCustomVal('musicEnd', null) && audioDuration > 0) {
+                                updateThemeCustomField('musicEnd', Math.round(audioDuration))
+                              }
+                            }}
+                            className={`px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                              getThemeCustomVal('musicTrimEnabled', false)
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                                : 'bg-gray-200 text-gray-600 border border-gray-300 hover:bg-gray-300'
+                            }`}
+                          >
+                            {getThemeCustomVal('musicTrimEnabled', false) ? (
+                              <>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>المقطع مقتطع ✓</span>
+                              </>
+                            ) : (
+                              <span>تفعيل الاقتطاع</span>
+                            )}
+                          </button>
+                        </div>
+
+                        {getThemeCustomVal('musicTrimEnabled', false) && (
+                          <div className="space-y-4 pt-1">
+                            {/* Summary Badge */}
+                            <div className="p-3 bg-white rounded-md border border-[#EAE1D3] flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <div>
+                                <span className="text-[#918579]">تشغيل المقطع: </span>
+                                <span className="font-bold text-[#C8A96B]">
+                                  من {formatSecondsToMMSS(getThemeCustomVal('musicStart', 0))} إلى{' '}
+                                  {formatSecondsToMMSS(getThemeCustomVal('musicEnd', audioDuration || 60))}
+                                </span>
+                                <span className="text-[10px] text-[#918579] mr-2">
+                                  (المدة:{' '}
+                                  {formatSecondsToMMSS(
+                                    Math.max(
+                                      0,
+                                      getThemeCustomVal('musicEnd', audioDuration || 60) -
+                                        getThemeCustomVal('musicStart', 0)
+                                    )
+                                  )})
+                                </span>
+                              </div>
+
+                              {audioDuration > 0 && (
+                                <span className="text-[10px] text-[#918579] font-mono">
+                                  إجمالي طول الملف: {formatSecondsToMMSS(audioDuration)}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Visual Timeline Scrubber */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between text-[10px] text-[#918579] font-mono">
+                                <span>00:00</span>
+                                <span className="text-[#C8A96B] font-bold">
+                                  موضع الاستماع الحالي: {formatSecondsToMMSS(audioCurrentTime)}
+                                </span>
+                                <span>{formatSecondsToMMSS(audioDuration || 60)}</span>
+                              </div>
+
+                              {/* Progress bar container */}
+                              <div
+                                onClick={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect()
+                                  const clickPos = (e.clientX - rect.left) / rect.width
+                                  const targetSec = clickPos * (audioDuration || 60)
+                                  if (previewAudioRef.current) {
+                                    if (previewAudioRef.current.src !== invitation.musicUrl) {
+                                      previewAudioRef.current.src = invitation.musicUrl
+                                    }
+                                    previewAudioRef.current.currentTime = targetSec
+                                    previewAudioRef.current.play().catch(() => {})
+                                    setIsPreviewPlaying(true)
+                                  }
+                                }}
+                                className="relative h-6 bg-gray-200 rounded-md overflow-hidden cursor-pointer border border-gray-300"
+                                title="اضغط في أي موضع للاستماع إليه"
+                              >
+                                {/* Highlighted Trimmed Region */}
+                                <div
+                                  className="absolute top-0 bottom-0 bg-[#C8A96B]/40 border-x-2 border-[#C8A96B] transition-all"
+                                  style={{
+                                    left: `${Math.max(
+                                      0,
+                                      Math.min(100, (getThemeCustomVal('musicStart', 0) / (audioDuration || 60)) * 100)
+                                    )}%`,
+                                    right: `${Math.max(
+                                      0,
+                                      100 -
+                                        Math.min(
+                                          100,
+                                          (getThemeCustomVal('musicEnd', audioDuration || 60) / (audioDuration || 60)) * 100
+                                        )
+                                    )}%`,
+                                  }}
+                                />
+
+                                {/* Red Playhead Cursor */}
+                                <div
+                                  className="absolute top-0 bottom-0 w-1 bg-red-600 shadow-sm transition-all pointer-events-none"
+                                  style={{
+                                    left: `${Math.max(
+                                      0,
+                                      Math.min(100, (audioCurrentTime / (audioDuration || 60)) * 100)
+                                    )}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Start & End Inputs */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {/* Start Time Box */}
+                              <div className="p-3 bg-white rounded-md border border-[#EAE1D3] space-y-2">
+                                <label className="block text-[11px] font-bold text-[#332A25]">
+                                  🟢 وقت بداية المقطع (دقيقة:ثانية)
+                                </label>
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="text"
+                                    value={formatSecondsToMMSS(getThemeCustomVal('musicStart', 0))}
+                                    onChange={(e) => {
+                                      const sec = parseMMSSToSeconds(e.target.value)
+                                      updateThemeCustomField('musicStart', sec)
+                                    }}
+                                    placeholder="00:00"
+                                    className="w-20 px-2 py-1 text-xs font-mono font-bold text-center rounded border border-[#EAE1D3] bg-[#FAF7F0]"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cur = Math.max(0, Math.floor(audioCurrentTime))
+                                      updateThemeCustomField('musicStart', cur)
+                                    }}
+                                    className="flex-1 px-2 py-1 rounded bg-[#C8A96B]/15 text-[#C8A96B] hover:bg-[#C8A96B]/25 text-[10px] font-bold cursor-pointer"
+                                  >
+                                    تحديد الموضع الحالي
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px]">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cur = Math.max(0, getThemeCustomVal('musicStart', 0) - 5)
+                                      updateThemeCustomField('musicStart', cur)
+                                    }}
+                                    className="px-2 py-0.5 rounded bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                  >
+                                    -5 ثواني
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cur = Math.min(
+                                        getThemeCustomVal('musicEnd', audioDuration || 60) - 1,
+                                        getThemeCustomVal('musicStart', 0) + 5
+                                      )
+                                      updateThemeCustomField('musicStart', Math.max(0, cur))
+                                    }}
+                                    className="px-2 py-0.5 rounded bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                  >
+                                    +5 ثواني
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* End Time Box */}
+                              <div className="p-3 bg-white rounded-md border border-[#EAE1D3] space-y-2">
+                                <label className="block text-[11px] font-bold text-[#332A25]">
+                                  🔴 وقت نهاية المقطع (دقيقة:ثانية)
+                                </label>
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="text"
+                                    value={formatSecondsToMMSS(
+                                      getThemeCustomVal('musicEnd', audioDuration || 60)
+                                    )}
+                                    onChange={(e) => {
+                                      const sec = parseMMSSToSeconds(e.target.value)
+                                      updateThemeCustomField('musicEnd', sec)
+                                    }}
+                                    placeholder="01:30"
+                                    className="w-20 px-2 py-1 text-xs font-mono font-bold text-center rounded border border-[#EAE1D3] bg-[#FAF7F0]"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cur = Math.max(
+                                        getThemeCustomVal('musicStart', 0) + 1,
+                                        Math.floor(audioCurrentTime)
+                                      )
+                                      updateThemeCustomField('musicEnd', cur)
+                                    }}
+                                    className="flex-1 px-2 py-1 rounded bg-[#C8A96B]/15 text-[#C8A96B] hover:bg-[#C8A96B]/25 text-[10px] font-bold cursor-pointer"
+                                  >
+                                    تحديد الموضع الحالي
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px]">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cur = Math.max(
+                                        getThemeCustomVal('musicStart', 0) + 1,
+                                        getThemeCustomVal('musicEnd', audioDuration || 60) - 5
+                                      )
+                                      updateThemeCustomField('musicEnd', cur)
+                                    }}
+                                    className="px-2 py-0.5 rounded bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                  >
+                                    -5 ثواني
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const maxD = audioDuration || 600
+                                      const cur = Math.min(
+                                        maxD,
+                                        getThemeCustomVal('musicEnd', audioDuration || 60) + 5
+                                      )
+                                      updateThemeCustomField('musicEnd', cur)
+                                    }}
+                                    className="px-2 py-0.5 rounded bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                  >
+                                    +5 ثواني
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Play Trimmed Segment & Reset */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (!invitation.musicUrl) return
+                                  if (isTrimPreviewPlaying) {
+                                    previewAudioRef.current?.pause()
+                                    setIsTrimPreviewPlaying(false)
+                                    setIsPreviewPlaying(false)
+                                  } else {
+                                    const startSec = getThemeCustomVal('musicStart', 0)
+                                    if (previewAudioRef.current) {
+                                      previewAudioRef.current.src = invitation.musicUrl
+                                      previewAudioRef.current.currentTime = startSec
+                                      previewAudioRef.current.play().catch(() => {})
+                                      setIsTrimPreviewPlaying(true)
+                                      setIsPreviewPlaying(true)
+                                      setPreviewTrackUrl(invitation.musicUrl)
+                                    }
+                                  }
+                                }}
+                                className="flex-1 py-2 px-3 rounded bg-[#C8A96B] text-white text-xs font-bold hover:bg-[#A68648] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                              >
+                                {isTrimPreviewPlaying ? (
+                                  <>
+                                    <Pause className="w-3.5 h-3.5" />
+                                    <span>إيقاف تشغيل الجزء المقتطع</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Play className="w-3.5 h-3.5 ml-0.5" />
+                                    <span>تشغيل الجزء المقتطع المحدد فقط ▶️</span>
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateThemeCustomField('musicStart', 0)
+                                  updateThemeCustomField('musicEnd', Math.round(audioDuration || 60))
+                                  if (previewAudioRef.current) {
+                                    previewAudioRef.current.currentTime = 0
+                                  }
+                                }}
+                                className="px-3 py-2 rounded border border-[#EAE1D3] text-[#73675C] hover:bg-gray-50 text-xs font-semibold cursor-pointer"
+                                title="إعادة ضبط البداية والنهاية لكامل المقطع"
+                              >
+                                إعادة ضبط
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    </div>
+
                     {/* Position selector */}
                     <div>
                       <label className="block text-xs font-semibold mb-1 text-[#332A25]">
@@ -1787,6 +2306,164 @@ export function LiveVisualBuilder({
                   </button>
                 </div>
 
+                {/* Primary Location Card Settings (مكان اللوكيشن كـ لينك واللوكيشن مكتوب وإمكانية الإظهار والإخفاء) */}
+                <div className="p-4 bg-white rounded-lg border border-[#EAE1D3] space-y-3.5 shadow-xs">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-[#EAE1D3]">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                        getThemeCustomVal('showLocationCard', true) ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        <MapPin className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h5 className="text-xs font-bold text-[#332A25]">
+                          كرت وخانة اللوكيشن والموقع (Location Card)
+                        </h5>
+                        <p className="text-[10px] text-[#918579]">
+                          {getThemeCustomVal('showLocationCard', true)
+                            ? 'كرت اللوكيشن معروض للضيوف مع رابط الاتجاهات'
+                            : 'كرت اللوكيشن والخريطة مخفي حالياً من الدعوة'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Master Toggle for Location Card */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateThemeCustomField('showLocationCard', !getThemeCustomVal('showLocationCard', true))
+                      }
+                      className={`px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        getThemeCustomVal('showLocationCard', true)
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                          : 'bg-gray-200 text-gray-600 border border-gray-300 hover:bg-gray-300'
+                      }`}
+                      title={getThemeCustomVal('showLocationCard', true) ? 'اضغط لإخفاء كرت اللوكيشن' : 'اضغط لإظهار كرت اللوكيشن'}
+                    >
+                      {getThemeCustomVal('showLocationCard', true) ? (
+                        <>
+                          <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>معروض بالدعوة</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5 text-gray-500" />
+                          <span>مخفي</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Quick Inputs for Primary Location */}
+                  <div className="space-y-2.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#332A25] mb-1 flex items-center justify-between">
+                        <span>📍 اللوكيشن مكتوب (اسم القاعة أو المكان)</span>
+                        <span className="text-[10px] text-[#918579] font-normal">العنوان والمكان المكتوب</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={invitation.events?.[0]?.venueName || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const events = [...(invitation.events || [])]
+                          if (events.length === 0) {
+                            events.push({
+                              id: `ev-${Date.now()}`,
+                              title: 'حفل الزفاف',
+                              venueName: val,
+                              date: invitation.couple?.weddingDate || new Date().toISOString(),
+                              startTime: invitation.couple?.weddingTime || '08:00 مساءً',
+                              isVisible: true,
+                              displayOrder: 0,
+                            })
+                          } else {
+                            events[0] = { ...events[0], venueName: val }
+                          }
+                          updateInvitationField('events', events)
+                        }}
+                        placeholder="مثال: قاعة ليلتي للاحتفالات - نادي اتحاد الشرطة"
+                        className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-[#FAF7F0] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#332A25] mb-1 flex items-center justify-between">
+                        <span>📝 اللوكيشن مكتوب بالتفصيل (العنوان / الحي / الشارع)</span>
+                        <span className="text-[10px] text-[#918579] font-normal">النص المكتوب بالتفصيل للضيوف</span>
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={invitation.events?.[0]?.address || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const events = [...(invitation.events || [])]
+                          if (events.length === 0) {
+                            events.push({
+                              id: `ev-${Date.now()}`,
+                              title: 'حفل الزفاف',
+                              address: val,
+                              date: invitation.couple?.weddingDate || new Date().toISOString(),
+                              startTime: invitation.couple?.weddingTime || '08:00 مساءً',
+                              isVisible: true,
+                              displayOrder: 0,
+                            })
+                          } else {
+                            events[0] = { ...events[0], address: val }
+                          }
+                          updateInvitationField('events', events)
+                        }}
+                        placeholder="مثال: شارع صلاح سالم، خلف مسجد الشرطة، القاهرة"
+                        className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-[#FAF7F0] resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-[#332A25]">
+                          🔗 اللوكيشن كـ لينك (رابط Google Maps)
+                        </label>
+                        {invitation.events?.[0]?.mapsUrl && (
+                          <a
+                            href={invitation.events[0].mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-[#C8A96B] hover:underline flex items-center gap-1 font-semibold"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span>فتح الرابط للتأكد منه</span>
+                          </a>
+                        )}
+                      </div>
+                      <input
+                        type="url"
+                        value={invitation.events?.[0]?.mapsUrl || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const events = [...(invitation.events || [])]
+                          if (events.length === 0) {
+                            events.push({
+                              id: `ev-${Date.now()}`,
+                              title: 'حفل الزفاف',
+                              mapsUrl: val,
+                              date: invitation.couple?.weddingDate || new Date().toISOString(),
+                              startTime: invitation.couple?.weddingTime || '08:00 مساءً',
+                              isVisible: true,
+                              displayOrder: 0,
+                            })
+                          } else {
+                            events[0] = { ...events[0], mapsUrl: val }
+                          }
+                          updateInvitationField('events', events)
+                        }}
+                        placeholder="https://maps.app.goo.gl/... أو https://maps.google.com/?q=..."
+                        className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-[#FAF7F0] font-mono text-left"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Section Titles Customization */}
                 <div className="p-4 bg-[#FAF7F0] rounded-lg border border-[#EAE1D3] space-y-3">
                   <p className="text-xs font-bold text-[#332A25]">
@@ -1849,6 +2526,21 @@ export function LiveVisualBuilder({
                             )}
                           </div>
                           <div className="flex items-center gap-1.5">
+                            {/* Location Card Toggle Button for this event */}
+                            <button
+                              type="button"
+                              onClick={() => updateEventField(idx, 'showLocationCard', ev.showLocationCard === false ? true : false)}
+                              className={`px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                                ev.showLocationCard !== false
+                                  ? 'bg-[#C8A96B]/15 text-[#C8A96B] border border-[#C8A96B]/40'
+                                  : 'bg-gray-200 text-gray-500 border border-gray-300'
+                              }`}
+                              title={ev.showLocationCard !== false ? 'كرت اللوكيشن معروض (اضغط للإخفاء)' : 'كرت اللوكيشن مخفي (اضغط للإظهار)'}
+                            >
+                              <MapPin className="w-3 h-3" />
+                              <span>{ev.showLocationCard !== false ? 'اللوكيشن معروض' : 'اللوكيشن مخفي'}</span>
+                            </button>
+
                             {/* Visibility Toggle Button */}
                             <button
                               type="button"
@@ -1925,22 +2617,22 @@ export function LiveVisualBuilder({
 
                         {/* Venue Name */}
                         <div>
-                          <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
-                            اسم المكان / القاعة / الفندق
+                          <label className="block text-[11px] font-bold text-[#332A25] mb-1">
+                            📍 اللوكيشن مكتوب (اسم المكان / القاعة / الفندق)
                           </label>
                           <input
                             type="text"
                             value={ev.venueName || ''}
                             onChange={(e) => updateEventField(idx, 'venueName', e.target.value)}
                             placeholder="مثال: قاعة ليلتي للاحتفالات"
-                            className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
+                            className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-semibold"
                           />
                         </div>
 
                         {/* Detailed Address */}
                         <div>
-                          <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
-                            العنوان بالتفصيل (المدينة، الحي، الشارع، المعلم)
+                          <label className="block text-[11px] font-bold text-[#332A25] mb-1">
+                            📝 اللوكيشن مكتوب بالتفصيل (المدينة، الحي، الشارع، المعلم)
                           </label>
                           <textarea
                             rows={2}
@@ -1998,15 +2690,29 @@ export function LiveVisualBuilder({
 
                         {/* Maps URL */}
                         <div>
-                          <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
-                            رابط خرائط جوجل (Google Maps URL)
-                          </label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[11px] font-bold text-[#332A25]">
+                              🔗 اللوكيشن كـ لينك (رابط خرائط جوجل Google Maps)
+                            </label>
+                            {ev.mapsUrl && (
+                              <a
+                                href={ev.mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-[#C8A96B] hover:underline flex items-center gap-1 font-semibold"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                <span>تجربة الرابط</span>
+                              </a>
+                            )}
+                          </div>
                           <input
                             type="url"
                             value={ev.mapsUrl || ''}
                             onChange={(e) => updateEventField(idx, 'mapsUrl', e.target.value)}
-                            placeholder="https://maps.google.com/?q=..."
-                            className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
+                            placeholder="https://maps.app.goo.gl/... أو https://maps.google.com/?q=..."
+                            className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-mono text-left"
+                            dir="ltr"
                           />
                         </div>
 

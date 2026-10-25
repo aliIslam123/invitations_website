@@ -249,6 +249,7 @@ export async function PUT(
             venueImage: ev.venueImage || null,
             description: ev.description || null,
             dressCode: ev.dressCode || null,
+            notes: ev.showLocationCard === false ? 'hideLocation' : (ev.notes || null),
             displayOrder: idx,
             isVisible: ev.isVisible ?? true,
           },
