@@ -11,6 +11,7 @@ interface InvitationCoverProps {
   groomName: string
   weddingDate?: Date | string | null
   monogram?: string | null
+  showMonogram?: boolean
   coverImage?: string | null
   coverType?: string
   theme: ThemeConfig
@@ -24,6 +25,7 @@ export function InvitationCover({
   groomName,
   weddingDate,
   monogram,
+  showMonogram = true,
   coverImage,
   coverType = 'elegant',
   theme,
@@ -50,7 +52,7 @@ export function InvitationCover({
       })
     : ''
 
-  const defaultMonogram = monogram || `${brideName.charAt(0)} & ${groomName.charAt(0)}`
+  const defaultMonogram = monogram || (showMonogram !== false ? `${brideName.charAt(0)} & ${groomName.charAt(0)}` : '')
 
   return (
     <AnimatePresence>
@@ -123,23 +125,25 @@ export function InvitationCover({
             />
 
             {/* Monogram Seal */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring', damping: 15 }}
-              className="mx-auto w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center border-2 mb-6 shadow-sm"
-              style={{
-                borderColor: theme.colors.primary,
-                backgroundColor: `${theme.colors.background}`,
-              }}
-            >
-              <span
-                className="font-serif-luxury text-xl md:text-2xl font-bold tracking-widest"
-                style={{ color: theme.colors.primary }}
+            {showMonogram !== false && Boolean(defaultMonogram) && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: 'spring', damping: 15 }}
+                className="mx-auto w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center border-2 mb-6 shadow-sm"
+                style={{
+                  borderColor: theme.colors.primary,
+                  backgroundColor: `${theme.colors.background}`,
+                }}
               >
-                {defaultMonogram}
-              </span>
-            </motion.div>
+                <span
+                  className="font-serif-luxury text-xl md:text-2xl font-bold tracking-widest"
+                  style={{ color: theme.colors.primary }}
+                >
+                  {defaultMonogram}
+                </span>
+              </motion.div>
+            )}
 
             {/* Subtitle */}
             <motion.p

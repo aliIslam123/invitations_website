@@ -860,6 +860,80 @@ export function LiveVisualBuilder({
                   </div>
                 </div>
 
+                {/* Monogram / Couple Initials at Start of Invitation (شعار الحروف في أول الدعوة) */}
+                <div className="p-4 bg-white rounded-lg border-2 border-[#C8A96B]/30 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#C8A96B]" />
+                      <span className="text-xs font-bold text-[#332A25]">
+                        شعار الحروف الأولى في بداية الدعوة (المونوغرام Monogram):
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateThemeCustomField('showMonogram', !getThemeCustomVal('showMonogram', true))
+                      }
+                      className={`px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer border flex items-center gap-1.5 ${
+                        getThemeCustomVal('showMonogram', true)
+                          ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/40 shadow-xs'
+                          : 'bg-red-50 text-red-600 border-red-200'
+                      }`}
+                    >
+                      {getThemeCustomVal('showMonogram', true) ? (
+                        <>
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>معروضة في بداية الدعوة</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" />
+                          <span>مخفية من بداية الدعوة</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#918579]">
+                    تظهر الحروف في الدائرة/الشعار الفاخر في أعلى واجهة الدعوة والغلاف. يمكنك إخفاؤها أو إظهارها وتعديل الأحرف في أي وقت.
+                  </p>
+
+                  {getThemeCustomVal('showMonogram', true) && (
+                    <div className="space-y-2 pt-2 border-t border-[#EAE1D3]">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] font-semibold text-[#332A25]">
+                          نص الحروف الأولى (مثال: M & A أو م & أ):
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const bName = invitation.couple?.brideFirstName?.trim() || ''
+                            const gName = invitation.couple?.groomFirstName?.trim() || ''
+                            const bChar = bName.charAt(0) || 'A'
+                            const gChar = gName.charAt(0) || 'M'
+                            const autoLetters = `${gChar} & ${bChar}`
+                            updateInvitationField('coverMonogram', autoLetters)
+                            updateCoupleField('monogram', autoLetters)
+                          }}
+                          className="text-[10px] text-[#C8A96B] hover:underline font-semibold cursor-pointer"
+                        >
+                          توليد تلقائي من الأسماء 🪄
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={invitation.coverMonogram || invitation.couple?.monogram || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          updateInvitationField('coverMonogram', val)
+                          updateCoupleField('monogram', val)
+                        }}
+                        placeholder="مثال: M & A أو م & أ"
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] font-serif-luxury text-center tracking-widest text-sm bg-[#FAF7F0]"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* Wedding Date, Time & Calendar Widget */}
                 <div className="p-4 bg-white rounded-lg border-2 border-[#C8A96B]/30 space-y-4 shadow-xs">
                   <div className="flex items-center gap-2 pb-2 border-b border-[#EAE1D3]">
@@ -3244,16 +3318,45 @@ export function LiveVisualBuilder({
                       )}
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold mb-1 text-[#332A25]">
-                        المونوغرام / الحروف الأولى
-                      </label>
+                    <div className="p-3 bg-[#FAF7F0] rounded border border-[#EAE1D3] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-semibold text-[#332A25]">
+                          المونوغرام / الحروف الأولى
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateThemeCustomField('showMonogram', !getThemeCustomVal('showMonogram', true))
+                          }
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer border flex items-center gap-1 ${
+                            getThemeCustomVal('showMonogram', true)
+                              ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/30'
+                              : 'bg-red-50 text-red-600 border-red-200'
+                          }`}
+                        >
+                          {getThemeCustomVal('showMonogram', true) ? (
+                            <>
+                              <Eye className="w-3 h-3" />
+                              <span>معروض</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3 h-3" />
+                              <span>مخفي</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <input
                         type="text"
-                        value={invitation.coverMonogram || ''}
-                        onChange={(e) => updateInvitationField('coverMonogram', e.target.value)}
-                        placeholder="A & S"
-                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3]"
+                        value={invitation.coverMonogram || invitation.couple?.monogram || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          updateInvitationField('coverMonogram', val)
+                          updateCoupleField('monogram', val)
+                        }}
+                        placeholder="مثال: M & A"
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] bg-white text-center font-serif-luxury"
                       />
                     </div>
                   </div>

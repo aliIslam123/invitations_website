@@ -74,6 +74,7 @@ export function InvitationRenderer({
   let autoScrollEnabled = true
   let calendarEnabled = true
   let showLocationCard = true
+  let showMonogram = true
   let musicTrimEnabled = false
   let musicStart: number | null = null
   let musicEnd: number | null = null
@@ -100,6 +101,9 @@ export function InvitationRenderer({
       }
       if (custom.showLocationCard !== undefined) {
         showLocationCard = custom.showLocationCard
+      }
+      if (custom.showMonogram !== undefined) {
+        showMonogram = custom.showMonogram
       }
       if (custom.musicTrimEnabled !== undefined) {
         musicTrimEnabled = custom.musicTrimEnabled
@@ -214,7 +218,8 @@ export function InvitationRenderer({
             heroImageMobile={couple.heroImageMobile}
             invitationText={couple.invitationText}
             invitationSubtext={couple.invitationSubtext}
-            monogram={couple.monogram || invitation.coverMonogram}
+            monogram={showMonogram ? (couple.monogram || invitation.coverMonogram) : null}
+            showMonogram={showMonogram}
             theme={theme}
             preset={preset}
             isRtl={isRtl}
@@ -371,7 +376,8 @@ export function InvitationRenderer({
             brideName={brideName}
             groomName={groomName}
             weddingDate={weddingDate}
-            monogram={couple.monogram || invitation.coverMonogram}
+            monogram={showMonogram ? (couple.monogram || invitation.coverMonogram) : null}
+            showMonogram={showMonogram}
             coverImage={invitation.coverImage}
             coverType={invitation.coverType}
             theme={theme}

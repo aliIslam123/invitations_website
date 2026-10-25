@@ -18,6 +18,7 @@ interface HeroSectionProps {
   invitationText?: string | null
   invitationSubtext?: string | null
   monogram?: string | null
+  showMonogram?: boolean
   theme: ThemeConfig
   preset?: AnimationPreset
   isRtl?: boolean
@@ -36,6 +37,7 @@ export function HeroSection({
   invitationText,
   invitationSubtext,
   monogram,
+  showMonogram = true,
   theme,
   preset = 'elegant',
   isRtl = true,
@@ -83,7 +85,7 @@ export function HeroSection({
             animate="visible"
             className="max-w-md w-full"
           >
-            {monogram && (
+            {showMonogram !== false && monogram && (
               <motion.div
                 variants={itemVariants}
                 className="w-14 h-14 mx-auto rounded-full border-2 flex items-center justify-center mb-6 font-serif-luxury font-bold text-lg"
@@ -166,7 +168,7 @@ export function HeroSection({
           animate="visible"
           className="max-w-2xl mx-auto"
         >
-          {monogram && (
+          {showMonogram !== false && monogram && (
             <motion.span
               variants={itemVariants}
               className="text-sm uppercase tracking-widest block mb-6 font-semibold"
@@ -360,7 +362,7 @@ export function HeroSection({
         className="relative z-10 px-4 py-16 max-w-3xl mx-auto flex flex-col items-center"
       >
         {/* Monogram or Badge */}
-        {monogram && (
+        {showMonogram !== false && monogram && (
           <motion.div
             variants={itemVariants}
             className="w-16 h-16 rounded-full border border-white/40 backdrop-blur-sm flex items-center justify-center mb-6 shadow-lg bg-black/20"
