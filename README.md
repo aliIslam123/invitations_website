@@ -1,36 +1,176 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💍 منصة دعوات الزفاف الرقمية الفاخرة | Luxury Wedding Invitation Platform
 
-## Getting Started
+منصة رقمية متكاملة لإنشاء وتخصيص وإدارة بطاقات ودعوات الزفاف الإلكترونية الفاخرة، تجمع بين فخامة التصميم الطباعي الملكي وأحدث تقنيات الويب التفاعلية.
 
-First, run the development server:
+---
+
+## 🌟 المزايا والمواصفات الرئيسية (Core Features)
+
+### 1. واجهة الدعوة العامة للضيوف (Guest Experience)
+- **غلاف بطاقة سينمائي (Cinematic Cover)**: تجربة فتح كرت رقمي تفاعلي بشعار العروسين المونوغرام وتأثير فتح ورقي فخم.
+- **مشغل موسيقى عائم (Floating Music Player)**: موسيقى زفاف هادئة في الخلفية مع أزرار تحكم كاملة وموجات صوتية متحركة (يبدأ التشغيل الآمن بتفاعل الضيف).
+- **واجهة بداية بأشكال متعددة (6 Hero Layouts)**:
+  - سينمائي شاشة كاملة (Cinematic)
+  - تحريري نمط المجلات (Editorial Portrait)
+  - مينيمالي هادئ (Minimal Luxury)
+  - رومانسي زهري (Floral Romantic)
+  - شاشة مقسومة (Split Screen)
+  - خط عربي كلاسيكي (Arabic Typography)
+- **عداد تنازلي دقيق (Accurate Countdown)**: حساب الأيام والساعات والدقائق والثواني مع دعم المناطق الزمنية ورسائل ما بعد انتهاء الحفل.
+- **تكامل مع Google Maps**: أزرار توجيه وخرائط تفاعلية تفتح في هواتف أندرويد وiOS وأجهزة الكمبيوتر بدون أخطاء.
+- **برنامج ومسار الحفل (Wedding Timeline)**: استعراض مراحل اليوم (استقبال، عقد القران، زفة العروسين، العشاء الملكي، إلخ).
+- **معرض صور تفاعلي (Photo Gallery Lightbox)**: استعراض الصور بكامل الشاشة مع التنقل باللمس والأسهم ولوحة المفاتيح.
+- **تأكيد الحضور التفاعلي (RSVP)**: تسجيل اسم الضيف، عدد المرافقين، رقم الهاتف، والتهنئة مع مؤثرات احتفالية (Confetti).
+- **أقسام إضافية قابلة للتخصيص**: قواعد الزي (Dress Code)، معلومات الهدايا، أرقام التواصل والتوجيه عبر واتساب.
+- **دعم كامل للغة العربية والإنجليزية**: دعم مثالي للاتجاهين (RTL و LTR).
+
+---
+
+### 2. لوحة الإدارة الفاخرة (Admin Dashboard)
+- **نظرة عامة حقيقية (Live Overview)**: إحصائيات فورية لعدد الدعوات، المنشورة، المسودات، إجمالي ردود الحضور، وعدد الضيوف المؤكدين.
+- **محرر بصري مباشر (Live Visual Builder)**:
+  - تقسيم الشاشة: لوحة الإعدادات والتحكم في اليمين، والمعاينة الحية الفورية في اليسار.
+  - أوضاع معاينة الأجهزة: شاشة كمبيوتر (Desktop)، تابلت (Tablet)، وجوال (Mobile - WhatsApp View).
+  - التحكم في إظهار وإخفاء الأقسام، وإعادة ترتيبها للأعلى والأسفل فورياً.
+  - خيارات تغيير السمات والخطوط والألوان بنقرة واحدة.
+- **معالج إنشاء دعوة موجه (Creation Wizard)**: 12 خطوة مبسطة لإطلاق أي دعوة خلال أقل من دقيقتين.
+- **مشاركة متقدمة عبر WhatsApp & QR Code**:
+  - توليد رمز QR فريد عالي الدقة قابل للتنزيل فورياً لكل دعوة.
+  - زر مشاركة واتساب يفتح رسالة مسبقة التجهيز برابط الدعوة.
+- **إدارة ردود الحضور (RSVP Management)**:
+  - تصفية الحاضرين والمعتذرين.
+  - البحث الفوري بالاسم أو الهاتف.
+  - تصدير كامل البيانات إلى ملفات Excel / CSV بضغطة زر.
+- **مكتبة وسائط متكاملة (Media Library)**: رفع الصور والمقاطع الصوتية وإدارتها ونسخ روابطها.
+- **6 سمات زفاف احترافية (Starter Themes)**:
+  1. *Royal Champagne* (الشمبانيا الملكي)
+  2. *Minimal Ivory* (العاجي المينيمالي)
+  3. *Romantic Burgundy* (الرومانسية البورغندي)
+  4. *Botanical Garden* (الحديقة النباتية)
+  5. *Modern Black & Gold* (الأسود والذهبي العصري)
+  6. *Soft Blush Romance* (الرومانسية الوردية الناعمة)
+- **3 أنماط حركية للحركات والانتقالات**:
+  1. Subtle (هادئ وبسيط)
+  2. Elegant (أنيق وراقي)
+  3. Cinematic (سينمائي فاخر)
+
+---
+
+## 🛠 التقنيات المستخدمة (Tech Stack)
+
+| المجال | التقنية |
+|---|---|
+| **إطار العمل** | Next.js 16 (App Router) + React 19 + TypeScript |
+| **التنسيق والتصميم** | Tailwind CSS v4 + خطوط جوجل الفاخرة (Cormorant Garamond, Alexandria, Tajawal) |
+| **المؤثرات الحركية** | Framer Motion + Canvas Confetti |
+| **قاعدة البيانات** | PostgreSQL (للإنتاج) / SQLite (للتطوير المحلي صفر إعدادات) عبر Prisma ORM |
+| **المصادقة والأمان** | JWT مشفر ومحمي بـ HTTP-Only Cookies عبر `jose` و `bcryptjs` |
+| **إدارة الوسائط** | تخزين محلي دائم / دعم جاهز لـ S3 Object Storage (AWS / Cloudflare R2) |
+| **رموز الاستجابة** | QRCode generator عالي الدقة |
+
+---
+
+## 🚀 دليل التشغيل المحلي (Quick Start)
+
+### 1. المتطلبات
+- Node.js (v18 فما فوق)
+- npm
+
+### 2. تثبيت الحزم وقاعدة البيانات
+قاعدة البيانات مهيأة مسبقاً وتعمل فورياً دون الحاجة لتثبيت أي خادم إضافي:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# الانتقال لمجلد المشروع
+cd "c:\Users\AHMED\Desktop\invitations website"
+
+# مزامنة قاعدة البيانات (Prisma)
+npx prisma db push
+
+# زرع البيانات النموذجية الفاخرة وحساب المدير
+npx tsx prisma/seed.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. تشغيل خادم التطوير
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+افتح المتصفح على:
+- **الموقع الرئيسي**: [http://localhost:3000](http://localhost:3000)
+- **نموذج دعوة أحمد وسارة**: [http://localhost:3000/wedding/ahmed-and-sara](http://localhost:3000/wedding/ahmed-and-sara)
+- **لوحة الإدارة**: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🔐 بيانات الدخول الافتراضية للمدير (Admin Credentials)
 
-To learn more about Next.js, take a look at the following resources:
+- **البريد الإلكتروني**: `admin@luxurywedding.com`
+- **كلمة المرور**: `AdminPassword2024!`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+*(يمكنك تغيير كلمة المرور والاسم في أي وقت من صفحة الإعدادات والأمان داخل لوحة التحكم)*.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🌐 التوزيع والإنتاج مع PostgreSQL (Production Deployment)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+للنشر على خوادم الإنتاج (Vercel, Docker, DigitalOcean, AWS):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. أنشئ قاعدة بيانات PostgreSQL وانسخ رابط الاتصال في متغير `DATABASE_URL`.
+2. استبدل ملف `prisma/schema.prisma` بمحتوى `prisma/schema.postgresql.prisma`.
+3. قم بتشغيل المزامنة:
+   ```bash
+   npx prisma db push
+   npx tsx prisma/seed.ts
+   npm run build
+   npm run start
+   ```
+
+---
+
+## 📁 هيكلية المشروع (Project Architecture)
+
+```
+invitations-website/
+├── app/
+│   ├── (public)/
+│   │   ├── wedding/[slug]/       # صفحة الدعوة العامة المحمية والفريدة
+│   │   ├── page.tsx              # واجهة المنصة الرئيسية
+│   │   └── not-found.tsx         # صفحة 404 الفاخرة
+│   ├── dashboard/                # لوحة الإدارة المحمية بالكامل
+│   │   ├── page.tsx              # الإحصائيات العامة (Overview)
+│   │   ├── invitations/          # إدارة قائمة الدعوات والبحث والتصفية
+│   │   │   ├── create/           # معالج الإنشاء الموجه (Wizard)
+│   │   │   └── edit/[id]/        # المحرر البصري الحي (Live Visual Builder)
+│   │   ├── rsvp/                 # إدارة ردود الحضور وتصدير Excel/CSV
+│   │   ├── media/                # مكتبة رفع وإدارة الوسائط
+│   │   ├── themes/               # استعراض السمات الستة
+│   │   └── settings/             # الملف الشخصي وتغيير كلمة المرور
+│   ├── api/                      # مسارات معالجة البيانات والملفات
+│   └── auth/                     # تسجيل الدخول وتدمير الجلسات
+├── components/
+│   ├── invitation/               # مكونات الدعوة العامة
+│   │   ├── InvitationCover.tsx   # غلاف البطاقة الافتتاحي
+│   │   ├── HeroSection.tsx       # واجهة البداية (6 خيارات)
+│   │   ├── MessageSection.tsx    # رسالة الدعوة وكلمة الأهل
+│   │   ├── CountdownSection.tsx  # العداد التنازلي التفاعلي
+│   │   ├── EventsSection.tsx     # الفعاليات وخرائط جوجل
+│   │   ├── TimelineSection.tsx   # مسار وبرنامج الحفل
+│   │   ├── GallerySection.tsx    # معرض الصور واللايت بوكس
+│   │   ├── MusicPlayer.tsx       # مشغل الموسيقى العائم
+│   │   ├── RSVPSection.tsx       # نموذج الحضور والاحتفال
+│   │   └── InvitationRenderer.tsx # المحرك الأساسي للعرض المشترك
+│   ├── dashboard/                # مكونات لوحة الإدارة
+│   └── editor/                   # مكونات المحرر البصري الحي
+├── lib/
+│   ├── db.ts                     # عميل Prisma Client
+│   ├── auth.ts                   # نظام المصادقة المشفر
+│   ├── themes.ts                 # تعريف السمات الستة وخصائصها
+│   ├── animations.ts             # محددات حركة Framer Motion
+│   ├── storage.ts                # معالج رفع وتخزين الملفات
+│   ├── validations.ts            # مخططات Zod للتحقق
+│   └── utils.ts                  # دوال التنسيق والروابط
+└── prisma/
+    ├── schema.prisma             # مخطط قاعدة البيانات
+    ├── schema.postgresql.prisma  # نسخة جاهزة للإنتاج مع PostgreSQL
+    └── seed.ts                   # البيانات الأولية التجريبية
+```
