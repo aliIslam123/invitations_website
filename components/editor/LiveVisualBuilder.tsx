@@ -53,12 +53,19 @@ export function LiveVisualBuilder({
   const router = useRouter()
   const [invitation, setInvitation] = useState(initialInvitation)
 
-  // Sync state if initialInvitation updates from server router.refresh()
+  const effectiveSiteUrl =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : siteUrl && !siteUrl.includes('localhost')
+      ? siteUrl
+      : 'https://invitations-website-rust.vercel.app'
+
+  // Sync state if initialInvitation updates from server router.refresh(), but never overwrite active typing
   useEffect(() => {
-    if (initialInvitation) {
+    if (initialInvitation && !hasUnsavedChanges) {
       setInvitation(initialInvitation)
     }
-  }, [initialInvitation])
+  }, [initialInvitation, hasUnsavedChanges])
   const [activeTab, setActiveTab] = useState<
     | 'couple'
     | 'theme'
@@ -145,6 +152,15 @@ export function LiveVisualBuilder({
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Pre-check for Vercel serverless request limits
+    if (file.size > 4.2 * 1024 * 1024) {
+      alert(
+        `حجم الملف (${(file.size / (1024 * 1024)).toFixed(1)} ميجابايت) كبير للرفع المباشر.\n\nالحد الأقصى للملفات المرفوعة مباشرة هو 4 ميجابايت لضمان سرعة تصفح الضيوف.\n\n💡 يمكنك:\n1. وضع رابط المقطع الصوتي أو الصورة مباشرة (URL) في الخانة المخصصة وسيتم تشغيله بأي حجم.\n2. أو اختيار مقطع مميز من مكتبة المقاطع الجاهزة.`
+      )
+      if (e.target) e.target.value = ''
+      return
+    }
+
     setIsUploading(fieldKey)
     try {
       const formData = new FormData()
@@ -167,11 +183,11 @@ export function LiveVisualBuilder({
         }
       } else {
         const errData = await res.json().catch(() => ({}))
-        alert(errData.error || 'حدث خطأ أثناء رفع الملف.')
+        alert(errData.error || 'حدث خطأ أثناء رفع الملف. يرجى التأكد من أن حجم الملف أقل من 4 ميجابايت.')
       }
     } catch (err) {
       console.error('Upload error:', err)
-      alert('تعذر رفع الملف من الجهاز. يرجى التأكد من أن حجم الملف أقل من 10 ميجابايت.')
+      alert('تعذر رفع الملف من الجهاز. يرجى التأكد من أن حجم الملف أقل من 4 ميجابايت.')
     } finally {
       setIsUploading(null)
       if (e.target) {
@@ -216,6 +232,29 @@ export function LiveVisualBuilder({
       setIsSaving(false)
     }
   }
+
+  // Auto-save on debounce: Automatically saves 2 seconds after the user stops typing
+  useEffect(() => {
+    if (!hasUnsavedChanges || isSaving) return
+
+    const timer = setTimeout(() => {
+      handleSave()
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [hasUnsavedChanges, isSaving, invitation])
+
+  // Ctrl+S / Cmd+S shortcut to save immediately
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        handleSave()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [invitation, isSaving])
 
   // Section visibility and reordering handlers
   const sections = useMemo(() => {
@@ -399,7 +438,7 @@ export function LiveVisualBuilder({
     }
   }
 
-  const publicUrl = getInvitationUrl(invitation.slug, siteUrl)
+  const publicUrl = getInvitationUrl(invitation.slug, effectiveSiteUrl)
 
   const copyPublicLink = () => {
     navigator.clipboard.writeText(publicUrl)
@@ -450,12 +489,19 @@ export function LiveVisualBuilder({
                 }`}
               />
               <span>{invitation.status === 'PUBLISHED' ? 'منشورة أونلاين' : 'مسودة خاصة'}</span>
-              {hasUnsavedChanges && (
-                <span className="text-amber-700 font-medium">(توجد تعديلات غير محفوظة)</span>
+              {hasUnsavedChanges && !isSaving && (
+                <span className="text-amber-700 font-medium flex items-center gap-1 animate-pulse">
+                  ● جاري حفظ التعديلات تلقائياً...
+                </span>
               )}
-              {saveSuccessNotice && (
+              {isSaving && (
+                <span className="text-[#C8A96B] font-semibold flex items-center gap-1">
+                  ⏳ جاري الحفظ والتحديث المباشر...
+                </span>
+              )}
+              {saveSuccessNotice && !hasUnsavedChanges && !isSaving && (
                 <span className="text-emerald-700 font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> تم الحفظ بنجاح!
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> تم حفظ التعديلات وتحديث الرابط فورياً!
                 </span>
               )}
             </div>
@@ -560,6 +606,13 @@ export function LiveVisualBuilder({
               href={publicUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={async (e) => {
+                if (hasUnsavedChanges) {
+                  e.preventDefault()
+                  await handleSave()
+                  window.open(publicUrl, '_blank')
+                }
+              }}
               className="p-2 rounded border border-[#EAE1D3] text-[#332A25] hover:bg-[#FAF7F0] transition-colors"
               title="فتح الرابط العام الفعلي"
             >
@@ -1434,16 +1487,25 @@ export function LiveVisualBuilder({
                     <div className="p-3 bg-white border border-[#EAE1D3] rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-[#332A25]">
-                          أو ارفع مقطع صوتي مخصص (MP3):
+                          رفع مقطع صوتي مخصص من جهازك:
                         </label>
                         <label className="cursor-pointer text-[11px] font-semibold text-[#C8A96B] hover:underline flex items-center gap-1">
-                          <Upload className="w-3 h-3" />
-                          <span>{isUploading === 'music' ? 'جاري الرفع...' : 'رفع ملف صوتي'}</span>
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isUploading === 'music' ? 'جاري الرفع...' : 'اختيار ملف صوتي'}</span>
                           <input
                             type="file"
-                            accept="audio/*"
+                            accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac"
                             className="hidden"
-                            onChange={(e) =>
+                            disabled={isUploading !== null}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0]
+                              if (f && f.size > 4.2 * 1024 * 1024) {
+                                alert(
+                                  `حجم الملف الصوتي (${(f.size / (1024 * 1024)).toFixed(1)} ميجابايت) كبير للرفع المباشر.\n\nالحد الأقصى للرفع المباشر هو 4 ميجابايت لضمان سرعة تصفح الضيوف.\n\n💡 يمكنك:\n1. وضع رابط المقطع الصوتي المباشر (URL) في الخانة أدناه وسيعمل فوراً بأي حجم!\n2. أو اختيار مقطع مميز من مكتبة الموسيقى الجاهزة بالأعلى.`
+                                )
+                                e.target.value = ''
+                                return
+                              }
                               handleFileUpload(
                                 e,
                                 (url) => {
@@ -1452,33 +1514,38 @@ export function LiveVisualBuilder({
                                 },
                                 'music'
                               )
-                            }
+                            }}
                           />
                         </label>
                       </div>
 
                       <div>
-                        <label className="block text-[11px] text-[#918579] mb-1">
-                          عنوان المقطع الموسيقي
+                        <label className="block text-[11px] font-medium text-[#73675C] mb-1">
+                          اسم أو عنوان المقطع الموسيقي
                         </label>
                         <input
                           type="text"
+                          placeholder="مثال: موسيقى زفاف رومانسية هادئة"
                           value={invitation.musicTitle || ''}
                           onChange={(e) => updateInvitationField('musicTitle', e.target.value)}
-                          className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3]"
+                          className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] outline-none"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] text-[#918579] mb-1">
-                          رابط ملف الصوت المباشر (URL)
+                        <label className="block text-[11px] font-medium text-[#73675C] mb-1">
+                          أو الصق رابط المقطع الصوتي المباشر (Direct Audio URL)
                         </label>
                         <input
                           type="url"
+                          placeholder="https://example.com/audio.mp3 (رابط مقطع مباشر أو من جوجل درايف)"
                           value={invitation.musicUrl || ''}
                           onChange={(e) => updateInvitationField('musicUrl', e.target.value)}
-                          className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3]"
+                          className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] outline-none font-mono"
                         />
+                        <p className="text-[10px] text-[#918579] mt-1">
+                          يدعم أي رابط مباشر لصوت بصيغة MP3 أو WAV من أي موقع على الإنترنت.
+                        </p>
                       </div>
 
                       {invitation.musicUrl && (

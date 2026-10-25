@@ -53,6 +53,12 @@ export function InvitationsClientList({
   siteUrl,
 }: InvitationsClientListProps) {
   const router = useRouter()
+  const effectiveSiteUrl =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : siteUrl && !siteUrl.includes('localhost')
+      ? siteUrl
+      : 'https://invitations-website-rust.vercel.app'
   const [invitations, setInvitations] = useState(initialInvitations)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
@@ -84,7 +90,7 @@ export function InvitationsClientList({
 
   // Copy URL to clipboard
   const handleCopyLink = async (slug: string) => {
-    const url = getInvitationUrl(slug, siteUrl)
+    const url = getInvitationUrl(slug, effectiveSiteUrl)
     await navigator.clipboard.writeText(url)
     setCopiedSlug(slug)
     setTimeout(() => setCopiedSlug(null), 2500)
@@ -95,7 +101,7 @@ export function InvitationsClientList({
     setQrModalItem(inv)
     try {
       const QRCode = (await import('qrcode')).default
-      const url = getInvitationUrl(inv.slug, siteUrl)
+      const url = getInvitationUrl(inv.slug, effectiveSiteUrl)
       const dataUrl = await QRCode.toDataURL(url, {
         width: 320,
         margin: 2,
@@ -270,7 +276,7 @@ export function InvitationsClientList({
                   const couple = inv.couple
                   const bride = couple?.brideFullName || couple?.brideFirstName || ''
                   const groom = couple?.groomFullName || couple?.groomFirstName || ''
-                  const pageUrl = getInvitationUrl(inv.slug, siteUrl)
+                  const pageUrl = getInvitationUrl(inv.slug, effectiveSiteUrl)
 
                   return (
                     <tr key={inv.id} className="hover:bg-[#FAF7F0]/30 transition-colors">
@@ -455,7 +461,7 @@ export function InvitationsClientList({
             )}
 
             <div className="text-[11px] font-mono text-[#918579] mb-4 truncate px-2">
-              {getInvitationUrl(qrModalItem.slug, siteUrl)}
+              {getInvitationUrl(qrModalItem.slug, effectiveSiteUrl)}
             </div>
 
             <a
@@ -491,7 +497,7 @@ export function InvitationsClientList({
             <div className="p-4 rounded-sm border border-[#EAE1D3] bg-[#FAF7F0] text-xs text-[#332A25] whitespace-pre-line leading-relaxed mb-6 font-medium">
               {formatWhatsAppMessage(
                 null,
-                getInvitationUrl(whatsAppModalItem.slug, siteUrl)
+                getInvitationUrl(whatsAppModalItem.slug, effectiveSiteUrl)
               )}
             </div>
 
@@ -500,7 +506,7 @@ export function InvitationsClientList({
                 href={`https://wa.me/?text=${encodeURIComponent(
                   formatWhatsAppMessage(
                     null,
-                    getInvitationUrl(whatsAppModalItem.slug, siteUrl)
+                    getInvitationUrl(whatsAppModalItem.slug, effectiveSiteUrl)
                   )
                 )}`}
                 target="_blank"
@@ -517,7 +523,7 @@ export function InvitationsClientList({
                   navigator.clipboard.writeText(
                     formatWhatsAppMessage(
                       null,
-                      getInvitationUrl(whatsAppModalItem.slug, siteUrl)
+                      getInvitationUrl(whatsAppModalItem.slug, effectiveSiteUrl)
                     )
                   )
                   alert('تم نسخ نص الرسالة بالكامل!')

@@ -38,6 +38,14 @@ export function MediaLibraryManager({ initialAssets }: MediaLibraryManagerProps)
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (file.size > 4.2 * 1024 * 1024) {
+      alert(
+        `حجم الملف (${(file.size / (1024 * 1024)).toFixed(1)} ميجابايت) كبير جداً للرفع المباشر.\n\nالحد الأقصى للرفع المباشر هو 4 ميجابايت لضمان سرعة تحميل الموقع لدى الضيوف.\n\n💡 بالنسبة للمقاطع الصوتية الكبيرة، يمكنك لصق رابط المقطع المباشر (URL) في إعدادات الموسيقى داخل محرر الدعوة.`
+      )
+      if (e.target) e.target.value = ''
+      return
+    }
+
     setIsUploading(true)
     const formData = new FormData()
     formData.append('file', file)
@@ -56,7 +64,7 @@ export function MediaLibraryManager({ initialAssets }: MediaLibraryManagerProps)
       }
     } catch (err) {
       console.error('Upload failed:', err)
-      alert('فشل رفع الملف.')
+      alert('فشل رفع الملف. تأكد من أن حجم الملف أقل من 4 ميجابايت.')
     } finally {
       setIsUploading(false)
       if (e.target) {
@@ -110,7 +118,7 @@ export function MediaLibraryManager({ initialAssets }: MediaLibraryManagerProps)
           <span>{isUploading ? 'جاري الرفع...' : 'رفع صورة أو مقطع صوتي'}</span>
           <input
             type="file"
-            accept="image/*,audio/*"
+            accept="image/*,audio/*,.mp3,.wav,.m4a,.ogg,.aac"
             disabled={isUploading}
             onChange={handleFileUpload}
             className="hidden"

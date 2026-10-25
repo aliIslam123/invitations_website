@@ -22,16 +22,16 @@ export async function saveMediaFile(file: File, invitationId?: string): Promise<
   const buffer = Buffer.from(bytes)
 
   const mimeType = file.type || 'application/octet-stream'
-  const isImage = isAllowedImageType(mimeType)
-  const isAudio = isAllowedAudioType(mimeType)
+  const isImage = isAllowedImageType(mimeType, file.name)
+  const isAudio = isAllowedAudioType(mimeType, file.name)
 
   if (!isImage && !isAudio) {
-    throw new Error('Unsupported file format. Please upload JPG, PNG, WEBP, or MP3/WAV audio.')
+    throw new Error('صيغة الملف غير مدعومة. يرجى رفع ملف صورة (JPG, PNG, WEBP) أو ملف صوتي (MP3, WAV, M4A, OGG).')
   }
 
   // Max 10MB
   if (file.size > 10 * 1024 * 1024) {
-    throw new Error('File exceeds the 10MB limit.')
+    throw new Error('حجم الملف يتجاوز الحد الأقصى (10 ميجابايت).')
   }
 
   const mediaType: 'image' | 'audio' | 'video' = isImage ? 'image' : 'audio'
@@ -39,6 +39,18 @@ export async function saveMediaFile(file: File, invitationId?: string): Promise<
   const randomHex = crypto.randomBytes(8).toString('hex')
   const cleanBaseName = file.name.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30)
   const filename = `${Date.now()}-${randomHex}-${cleanBaseName}${ext}`
+
+  let effectiveMimeType = mimeType
+  if (isAudio && (!effectiveMimeType || effectiveMimeType === 'application/octet-stream')) {
+    effectiveMimeType =
+      ext === '.wav'
+        ? 'audio/wav'
+        : ext === '.ogg'
+        ? 'audio/ogg'
+        : ext === '.m4a'
+        ? 'audio/mp4'
+        : 'audio/mpeg'
+  }
 
   try {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads')
@@ -55,7 +67,7 @@ export async function saveMediaFile(file: File, invitationId?: string): Promise<
       storageKey,
       filename,
       fileSize: file.size,
-      mimeType,
+      mimeType: effectiveMimeType,
       mediaType,
     }
   } catch (err) {
@@ -63,14 +75,14 @@ export async function saveMediaFile(file: File, invitationId?: string): Promise<
     // Fall back to Data URL so uploads continue to function without external S3
     console.warn('Filesystem is read-only or inaccessible; falling back to Data URL:', err)
     const base64 = buffer.toString('base64')
-    const dataUrl = `data:${mimeType};base64,${base64}`
+    const dataUrl = `data:${effectiveMimeType};base64,${base64}`
 
     return {
       url: dataUrl,
       storageKey: `inline-${filename}`,
       filename,
       fileSize: file.size,
-      mimeType,
+      mimeType: effectiveMimeType,
       mediaType,
     }
   }

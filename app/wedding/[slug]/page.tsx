@@ -53,7 +53,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       couple?.heroImage ||
       'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80'
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
+        ? process.env.NEXT_PUBLIC_SITE_URL
+        : 'https://invitations-website-rust.vercel.app'
     const pageUrl = getInvitationUrl(slug, siteUrl)
 
     return {

@@ -329,14 +329,15 @@ export async function PUT(
     // Instant cache revalidation across the platform
     try {
       if (fullUpdated) {
-        revalidatePath(`/wedding/${fullUpdated.slug}`)
-        revalidatePath(`/dashboard/invitations/edit/${id}`)
+        revalidatePath(`/wedding/${fullUpdated.slug}`, 'page')
+        revalidatePath(`/dashboard/invitations/edit/${id}`, 'page')
       }
       if (slug && slug !== fullUpdated?.slug) {
-        revalidatePath(`/wedding/${slug}`)
+        revalidatePath(`/wedding/${slug}`, 'page')
       }
-      revalidatePath('/dashboard/invitations')
-      revalidatePath('/dashboard')
+      revalidatePath('/dashboard/invitations', 'page')
+      revalidatePath('/dashboard', 'page')
+      revalidatePath('/', 'layout')
     } catch (e) {
       console.warn('Revalidation notice:', e)
     }

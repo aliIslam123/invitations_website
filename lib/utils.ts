@@ -123,15 +123,53 @@ export function truncate(str: string, maxLength: number): string {
 /**
  * Check if a file type is an allowed image type.
  */
-export function isAllowedImageType(mimeType: string): boolean {
-  return ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'].includes(mimeType)
+export function isAllowedImageType(mimeType: string, filename?: string): boolean {
+  if (mimeType && (mimeType.startsWith('image/') || [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/avif',
+    'image/gif',
+    'image/svg+xml'
+  ].includes(mimeType))) {
+    return true
+  }
+  if (filename) {
+    const ext = filename.toLowerCase().split('.').pop()
+    return ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'svg'].includes(ext || '')
+  }
+  return false
 }
 
 /**
  * Check if a file type is an allowed audio type.
  */
-export function isAllowedAudioType(mimeType: string): boolean {
-  return ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/mp4'].includes(mimeType)
+export function isAllowedAudioType(mimeType: string, filename?: string): boolean {
+  if (mimeType && (mimeType.startsWith('audio/') || [
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/wav',
+    'audio/ogg',
+    'audio/aac',
+    'audio/mp4',
+    'audio/x-m4a',
+    'audio/m4a',
+    'audio/x-wav',
+    'audio/webm',
+    'audio/flac',
+    'audio/x-mp3',
+    'audio/vnd.wav',
+    'audio/basic',
+    'audio/mid',
+    'audio/x-aiff'
+  ].includes(mimeType))) {
+    return true
+  }
+  if (filename) {
+    const ext = filename.toLowerCase().split('.').pop()
+    return ['mp3', 'wav', 'm4a', 'ogg', 'aac', 'flac', 'webm', 'wma', 'mp4'].includes(ext || '')
+  }
+  return false
 }
 
 /**
@@ -147,9 +185,23 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Generate the public invitation URL.
+ * Always resolves to the active online domain in production, never localhost.
  */
 export function getInvitationUrl(slug: string, siteUrl?: string): string {
-  const base = siteUrl ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/wedding/${slug}`
+  }
+
+  let base = siteUrl || process.env.NEXT_PUBLIC_SITE_URL || ''
+  if (!base || base.includes('localhost')) {
+    if (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')) {
+      base = process.env.NEXT_PUBLIC_SITE_URL
+    } else {
+      base = 'https://invitations-website-rust.vercel.app'
+    }
+  }
+
+  base = base.replace(/\/+$/, '')
   return `${base}/wedding/${slug}`
 }
 
