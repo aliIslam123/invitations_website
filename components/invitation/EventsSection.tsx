@@ -276,10 +276,6 @@ export function EventsSection({
                     )}
                   </div>
                 </div>
-                      className="w-full h-full"
-                    />
-                  </div>
-                )}
               </motion.div>
             )
           })}

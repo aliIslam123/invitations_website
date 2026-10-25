@@ -2143,7 +2143,6 @@ export function LiveVisualBuilder({
                         )}
                       </div>
                     )}
-                    </div>
 
                     {/* Position selector */}
                     <div>
