@@ -486,12 +486,27 @@ async function main() {
           { sectionKey: 'message', displayOrder: 2, isVisible: true },
           { sectionKey: 'countdown', displayOrder: 3, isVisible: true },
           { sectionKey: 'events', displayOrder: 4, isVisible: true },
-          { sectionKey: 'timeline', displayOrder: 5, isVisible: true },
+          { sectionKey: 'timeline', displayOrder: 5, isVisible: false },
           { sectionKey: 'rsvp', displayOrder: 6, isVisible: true },
         ],
       },
     },
   })
+
+  // Ensure timeline is hidden for Mohamed & Asmaa
+  const mohamedRecord = await prisma.weddingInvitation.findUnique({
+    where: { slug: 'mohamed-and-asmaa' },
+  })
+  if (mohamedRecord) {
+    await prisma.invitationSection.updateMany({
+      where: { invitationId: mohamedRecord.id, sectionKey: 'timeline' },
+      data: { isVisible: false },
+    })
+    await prisma.timelineItem.updateMany({
+      where: { invitationId: mohamedRecord.id },
+      data: { isVisible: false },
+    })
+  }
 
   console.log(`✅ Sample invitations seeded successfully!`)
   console.log(`   - http://localhost:3000/wedding/ahmed-and-sara`)

@@ -34,6 +34,11 @@ import {
   CheckCircle2,
   Heart,
   Edit3,
+  Clock,
+  Coffee,
+  Utensils,
+  Cake,
+  Camera,
 } from 'lucide-react'
 import { InvitationRenderer } from '@/components/invitation/InvitationRenderer'
 import { WeddingCalendarCard } from '@/components/invitation/WeddingCalendarCard'
@@ -80,6 +85,7 @@ export function LiveVisualBuilder({
     | 'music'
     | 'sections'
     | 'events'
+    | 'timeline'
     | 'rsvp'
     | 'seo'
   >('couple')
@@ -273,6 +279,7 @@ export function LiveVisualBuilder({
   }, [invitation.sections])
 
   const isEventsSectionVisible = sections.find((s) => s.sectionKey === 'events')?.isVisible !== false
+  const isTimelineSectionVisible = sections.find((s) => s.sectionKey === 'timeline')?.isVisible !== false
 
   const toggleSectionVisibility = (key: string) => {
     const updated = sections.map((s) =>
@@ -348,6 +355,44 @@ export function LiveVisualBuilder({
     list.splice(index, 1)
     const reordered = list.map((ev, idx) => ({ ...ev, displayOrder: idx }))
     updateInvitationField('events', reordered)
+  }
+
+  // Timeline Handlers
+  const handleAddTimelineItem = () => {
+    const newItem = {
+      id: `time-${Date.now()}`,
+      time: '08:00 مساءً',
+      title: 'استقبال الضيوف الكرام',
+      description: 'الترحيب بالضيوف وتقديم القهوة السعودية والضيافة الافتتاحية',
+      icon: 'heart',
+      displayOrder: (invitation.timeline || []).length,
+      isVisible: true,
+    }
+    updateInvitationField('timeline', [...(invitation.timeline || []), newItem])
+  }
+
+  const updateTimelineField = (index: number, field: string, value: any) => {
+    const list = [...(invitation.timeline || [])]
+    list[index] = { ...list[index], [field]: value }
+    updateInvitationField('timeline', list)
+  }
+
+  const moveTimelineItem = (index: number, direction: 'up' | 'down') => {
+    const target = direction === 'up' ? index - 1 : index + 1
+    if (target < 0 || target >= (invitation.timeline || []).length) return
+    const list = [...(invitation.timeline || [])]
+    const temp = list[index]
+    list[index] = list[target]
+    list[target] = temp
+    const reordered = list.map((item, idx) => ({ ...item, displayOrder: idx }))
+    updateInvitationField('timeline', reordered)
+  }
+
+  const deleteTimelineItem = (index: number) => {
+    const list = [...(invitation.timeline || [])]
+    list.splice(index, 1)
+    const reordered = list.map((item, idx) => ({ ...item, displayOrder: idx }))
+    updateInvitationField('timeline', reordered)
   }
 
   // Gallery Handlers
@@ -673,6 +718,7 @@ export function LiveVisualBuilder({
             {[
               { id: 'couple', label: 'العروسين والموعد', icon: Sparkles },
               { id: 'events', label: 'الفعاليات والموقع', icon: Calendar },
+              { id: 'timeline', label: 'مسار وبرنامج الحفل', icon: Clock },
               { id: 'rsvp', label: 'تأكيد الحضور (RSVP)', icon: Users },
               { id: 'music', label: 'الموسيقى', icon: Music },
               { id: 'effects', label: 'تأثيرات الورود', icon: Flower2 },
@@ -1975,6 +2021,228 @@ export function LiveVisualBuilder({
                             onChange={(e) => updateEventField(idx, 'description', e.target.value)}
                             placeholder="مثال: نرجو الحضور قبل موعد الزفة بنصف ساعة"
                             className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB: TIMELINE */}
+            {activeTab === 'timeline' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-serif-luxury font-bold text-[#332A25]">
+                    مسار وبرنامج الحفل (Timeline)
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={handleAddTimelineItem}
+                    className="px-3 py-1.5 rounded bg-[#C8A96B] text-white text-xs font-semibold hover:bg-[#A68648] flex items-center gap-1 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>إضافة فقرة جديدة</span>
+                  </button>
+                </div>
+
+                {/* Master Section Visibility Toggle */}
+                <div className="p-4 bg-white rounded-lg border border-[#EAE1D3] flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                        isTimelineSectionVisible ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
+                      }`}
+                    >
+                      {isTimelineSectionVisible ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[#332A25]">
+                        إظهار قسم مسار وبرنامج الحفل في الدعوة
+                      </p>
+                      <p className="text-[11px] text-[#918579]">
+                        {isTimelineSectionVisible
+                          ? 'القسم معروض حالياً للضيوف في صفحة الدعوة'
+                          : 'القسم مخفي بالكامل ولن يظهر للضيوف'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionVisibility('timeline')}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                      isTimelineSectionVisible ? 'bg-[#C8A96B]' : 'bg-gray-300'
+                    }`}
+                    title={isTimelineSectionVisible ? 'اضغط لإخفاء مسار الحفل بالكامل' : 'اضغط لإظهار مسار الحفل'}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        isTimelineSectionVisible ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Timeline Items List */}
+                <div className="space-y-4">
+                  <p className="text-xs font-bold text-[#332A25]">
+                    فقرات برنامج الحفل ({(invitation.timeline || []).length}):
+                  </p>
+
+                  {(invitation.timeline || []).length === 0 ? (
+                    <div className="p-6 text-center bg-[#FAF7F0] rounded-lg border border-[#EAE1D3] text-xs text-[#918579] space-y-2">
+                      <p>لا توجد فقرات لبرنامج الحفل حالياً.</p>
+                      <button
+                        type="button"
+                        onClick={handleAddTimelineItem}
+                        className="px-3 py-1.5 rounded bg-[#C8A96B] text-white text-xs font-semibold hover:bg-[#A68648] inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>إضافة فقرة جديدة الآن</span>
+                      </button>
+                    </div>
+                  ) : (
+                    (invitation.timeline || []).map((item: any, idx: number) => (
+                      <div
+                        key={item.id || idx}
+                        className={`p-4 rounded-lg border space-y-3 relative shadow-xs transition-all ${
+                          item.isVisible !== false ? 'bg-[#FAF7F0] border-[#EAE1D3]' : 'bg-gray-50 border-gray-300 opacity-70'
+                        }`}
+                      >
+                        {/* Header with controls */}
+                        <div className="flex items-center justify-between pb-2 border-b border-[#EAE1D3]">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-[#C8A96B]">
+                              الفقرة #{idx + 1}
+                            </span>
+                            {item.title && (
+                              <span className="text-xs text-[#332A25] font-semibold truncate max-w-[140px] sm:max-w-xs">
+                                • {item.title}
+                              </span>
+                            )}
+                            {item.time && (
+                              <span className="text-[11px] text-[#918579] bg-white px-2 py-0.5 rounded border border-[#EAE1D3]">
+                                {item.time}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            {/* Visibility Toggle Button */}
+                            <button
+                              type="button"
+                              onClick={() => updateTimelineField(idx, 'isVisible', item.isVisible === false ? true : false)}
+                              className={`px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                                item.isVisible !== false
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                                  : 'bg-gray-200 text-gray-600 border border-gray-300 hover:bg-gray-300'
+                              }`}
+                              title={item.isVisible !== false ? 'الفقرة معروضة للضيوف (اضغط للإخفاء)' : 'الفقرة مخفية (اضغط للإظهار)'}
+                            >
+                              {item.isVisible !== false ? (
+                                <>
+                                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>معروضة</span>
+                                </>
+                              ) : (
+                                <>
+                                  <EyeOff className="w-3.5 h-3.5 text-gray-500" />
+                                  <span>مخفية</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* Move buttons */}
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => moveTimelineItem(idx, 'up')}
+                              className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 cursor-pointer text-[#918579]"
+                              title="تحريك لأعلى"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === (invitation.timeline || []).length - 1}
+                              onClick={() => moveTimelineItem(idx, 'down')}
+                              className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 cursor-pointer text-[#918579]"
+                              title="تحريك لأسفل"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Delete button */}
+                            <button
+                              type="button"
+                              onClick={() => deleteTimelineItem(idx)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded cursor-pointer"
+                              title="حذف الفقرة"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Item Inputs */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
+                              الوقت أو الموعد
+                            </label>
+                            <input
+                              type="text"
+                              value={item.time || ''}
+                              onChange={(e) => updateTimelineField(idx, 'time', e.target.value)}
+                              placeholder="مثال: 08:00 مساءً"
+                              className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
+                              الأيقونة
+                            </label>
+                            <select
+                              value={item.icon || 'clock'}
+                              onChange={(e) => updateTimelineField(idx, 'icon', e.target.value)}
+                              className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white cursor-pointer"
+                            >
+                              <option value="clock">🕒 ساعة / وقت (Clock)</option>
+                              <option value="heart">❤️ قلب / حب (Heart)</option>
+                              <option value="sparkles">✨ نجوم / احتفال (Sparkles)</option>
+                              <option value="coffee">☕ قهوة / ضيافة (Coffee)</option>
+                              <option value="utensils">🍽️ عشاء / بوفيه (Dinner)</option>
+                              <option value="cake">🎂 تورتة الزفاف (Cake)</option>
+                              <option value="music">🎵 موسيقى ورقص (Music)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
+                            عنوان الفقرة
+                          </label>
+                          <input
+                            type="text"
+                            value={item.title || ''}
+                            onChange={(e) => updateTimelineField(idx, 'title', e.target.value)}
+                            placeholder="مثال: استقبال الضيوف الكرام"
+                            className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-medium"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
+                            تفاصيل ووصف الفقرة
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={item.description || ''}
+                            onChange={(e) => updateTimelineField(idx, 'description', e.target.value)}
+                            placeholder="مثال: الترحيب بالأهل والأصدقاء وتناول المشروبات والقهوة"
+                            className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white resize-none"
                           />
                         </div>
                       </div>

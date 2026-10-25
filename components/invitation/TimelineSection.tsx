@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Coffee, Heart, Sparkles, Utensils, Music, Cake, Clock } from 'lucide-react'
+import { Coffee, Heart, Sparkles, Utensils, Music, Cake, Clock, Camera } from 'lucide-react'
 import { ThemeConfig } from '@/lib/themes'
 import { AnimationPreset, getFadeUpVariants } from '@/lib/animations'
 
@@ -48,11 +48,14 @@ export function TimelineSection({
       case 'sparkles':
         return <Sparkles className="w-4 h-4" />
       case 'utensils':
+      case 'glass':
         return <Utensils className="w-4 h-4" />
       case 'cake':
         return <Cake className="w-4 h-4" />
       case 'music':
         return <Music className="w-4 h-4" />
+      case 'camera':
+        return <Camera className="w-4 h-4" />
       default:
         return <Clock className="w-4 h-4" />
     }

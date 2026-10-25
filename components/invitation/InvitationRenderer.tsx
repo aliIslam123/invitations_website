@@ -261,7 +261,11 @@ export function InvitationRenderer({
         )
       }
 
-      case 'timeline':
+      case 'timeline': {
+        const timelineSec = (invitation.sections || []).find((s: any) => s.sectionKey === 'timeline')
+        if (timelineSec && timelineSec.isVisible === false) return null
+        const visibleTimelineItems = (invitation.timeline || []).filter((item: any) => item.isVisible !== false)
+        if (visibleTimelineItems.length === 0) return null
         return (
           <TimelineSection
             key="timeline"
@@ -271,6 +275,7 @@ export function InvitationRenderer({
             isRtl={isRtl}
           />
         )
+      }
 
       case 'gallery':
         return (

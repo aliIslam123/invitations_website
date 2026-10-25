@@ -443,7 +443,7 @@ export async function GET() {
                 description: 'مشاركة أجمل اللحظات والتقاط الصور مع العروسين',
                 icon: 'camera',
                 displayOrder: 4,
-                isVisible: true,
+                isVisible: false,
               },
             ],
           },
@@ -453,11 +453,26 @@ export async function GET() {
               { sectionKey: 'message', displayOrder: 2, isVisible: true },
               { sectionKey: 'countdown', displayOrder: 3, isVisible: true },
               { sectionKey: 'events', displayOrder: 4, isVisible: true },
-              { sectionKey: 'timeline', displayOrder: 5, isVisible: true },
+              { sectionKey: 'timeline', displayOrder: 5, isVisible: false },
               { sectionKey: 'rsvp', displayOrder: 6, isVisible: true },
             ],
           },
         },
+      })
+    }
+
+    // Ensure timeline is disabled and hidden for Mohamed & Asmaa per user request
+    const existingMohamedInv = await prisma.weddingInvitation.findUnique({
+      where: { slug: 'mohamed-and-asmaa' },
+    })
+    if (existingMohamedInv) {
+      await prisma.invitationSection.updateMany({
+        where: { invitationId: existingMohamedInv.id, sectionKey: 'timeline' },
+        data: { isVisible: false },
+      })
+      await prisma.timelineItem.updateMany({
+        where: { invitationId: existingMohamedInv.id },
+        data: { isVisible: false },
       })
     }
 
