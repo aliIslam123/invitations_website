@@ -26,17 +26,26 @@ export default function WeddingInvitationError({
         <p className="text-xs text-[#918579] leading-relaxed">
           نعتذر عن هذا التأخير البسيط، جاري استعادة تفاصيل بطاقة الدعوة...
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            if (typeof retry === 'function') retry()
-            else window.location.reload()
-          }}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-md cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>تحديث الدعوة</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof retry === 'function') retry()
+              else window.location.reload()
+            }}
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-md cursor-pointer w-full sm:w-auto"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>تحديث الدعوة</span>
+          </button>
+
+          <a
+            href="/api/setup"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs font-semibold text-[#332A25] bg-[#FAF7F0] hover:bg-[#EAE1D3] border border-[#C8A96B]/50 transition-colors shadow-xs w-full sm:w-auto"
+          >
+            <span>تفعيل قاعدة البيانات (1-Click Setup) 🚀</span>
+          </a>
+        </div>
       </div>
     </div>
   )

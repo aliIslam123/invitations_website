@@ -6,22 +6,26 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function InvitationsPage() {
-  const invitations = await prisma.weddingInvitation.findMany({
-    orderBy: { updatedAt: 'desc' },
-    include: {
-      couple: true,
-      _count: {
-        select: {
-          rsvpResponses: true,
-          events: true,
+  let serializedInvitations: any[] = []
+  try {
+    const invitations = await prisma.weddingInvitation.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        couple: true,
+        _count: {
+          select: {
+            rsvpResponses: true,
+            events: true,
+          },
         },
       },
-    },
-  })
+    })
+    serializedInvitations = JSON.parse(JSON.stringify(invitations))
+  } catch (err) {
+    console.error('Error fetching invitations:', err)
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-
-  const serializedInvitations = JSON.parse(JSON.stringify(invitations))
 
   return <InvitationsClientList initialInvitations={serializedInvitations} siteUrl={siteUrl} />
 }

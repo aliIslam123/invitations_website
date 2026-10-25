@@ -1,5 +1,5 @@
 import React from 'react'
-import Link from 'next/navigation'
+import Link from 'next/link'
 import { HeartCrack, ArrowLeft, Home } from 'lucide-react'
 
 export default function NotFound() {

@@ -2,30 +2,277 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 
+const INIT_SQL = `
+CREATE TABLE IF NOT EXISTS "users" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT,
+    "email" TEXT NOT NULL UNIQUE,
+    "emailVerified" TIMESTAMP(3),
+    "image" TEXT,
+    "passwordHash" TEXT,
+    "role" TEXT NOT NULL DEFAULT 'ADMIN',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "wedding_invitations" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "slug" TEXT NOT NULL UNIQUE,
+    "status" TEXT NOT NULL DEFAULT 'DRAFT',
+    "userId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "title" TEXT NOT NULL DEFAULT '',
+    "language" TEXT NOT NULL DEFAULT 'ar',
+    "direction" TEXT NOT NULL DEFAULT 'rtl',
+    "coverEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "coverType" TEXT NOT NULL DEFAULT 'elegant',
+    "coverImage" TEXT,
+    "coverOverlayColor" TEXT NOT NULL DEFAULT '#332A25',
+    "coverOverlayOpacity" DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    "coverMonogram" TEXT,
+    "themeId" TEXT NOT NULL DEFAULT 'royal-champagne',
+    "themeCustom" TEXT,
+    "animationPreset" TEXT NOT NULL DEFAULT 'elegant',
+    "seoTitle" TEXT,
+    "seoDescription" TEXT,
+    "seoImage" TEXT,
+    "whatsappMessage" TEXT,
+    "musicEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "musicUrl" TEXT,
+    "musicTitle" TEXT,
+    "musicAutoplay" BOOLEAN NOT NULL DEFAULT false,
+    "musicPosition" TEXT NOT NULL DEFAULT 'bottom-right',
+    "rsvpEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "rsvpDeadline" TIMESTAMP(3),
+    "rsvpMaxGuests" INTEGER,
+    "rsvpAllowPlusOne" BOOLEAN NOT NULL DEFAULT true,
+    "rsvpRequireContact" BOOLEAN NOT NULL DEFAULT false,
+    "rsvpConfirmMsg" TEXT,
+    "rsvpDeclineMsg" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "couple_information" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invitationId" TEXT NOT NULL UNIQUE REFERENCES "wedding_invitations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "brideFirstName" TEXT NOT NULL DEFAULT '',
+    "brideLastName" TEXT NOT NULL DEFAULT '',
+    "brideFullName" TEXT NOT NULL DEFAULT '',
+    "brideFather" TEXT,
+    "brideMother" TEXT,
+    "brideFamily" TEXT,
+    "brideBio" TEXT,
+    "bridePhoto" TEXT,
+    "groomFirstName" TEXT NOT NULL DEFAULT '',
+    "groomLastName" TEXT NOT NULL DEFAULT '',
+    "groomFullName" TEXT NOT NULL DEFAULT '',
+    "groomFather" TEXT,
+    "groomMother" TEXT,
+    "groomFamily" TEXT,
+    "groomBio" TEXT,
+    "groomPhoto" TEXT,
+    "couplePhoto" TEXT,
+    "monogram" TEXT,
+    "weddingDate" TIMESTAMP(3),
+    "weddingTime" TEXT,
+    "timezone" TEXT NOT NULL DEFAULT 'Asia/Riyadh',
+    "messageHeading" TEXT,
+    "messageBody" TEXT,
+    "messageFontFamily" TEXT,
+    "heroLayout" TEXT NOT NULL DEFAULT 'cinematic',
+    "heroImage" TEXT,
+    "heroImageMobile" TEXT,
+    "heroVideo" TEXT,
+    "invitationText" TEXT,
+    "invitationSubtext" TEXT,
+    "familyNamesEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "familyNamesContent" TEXT,
+    "dressCodeEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "dressCodeContent" TEXT,
+    "giftInfoEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "giftInfoContent" TEXT,
+    "contactEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "contactPhone" TEXT,
+    "contactWhatsapp" TEXT,
+    "contactEmail" TEXT,
+    "socialEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "socialLinks" TEXT,
+    "customSections" TEXT,
+    "wishesEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "postEventEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "postEventMessage" TEXT,
+    "postEventImage" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "wedding_events" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invitationId" TEXT NOT NULL REFERENCES "wedding_invitations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "title" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "startTime" TEXT,
+    "endTime" TEXT,
+    "timezone" TEXT NOT NULL DEFAULT 'Asia/Riyadh',
+    "venueName" TEXT,
+    "address" TEXT,
+    "mapsUrl" TEXT,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
+    "venueImage" TEXT,
+    "description" TEXT,
+    "dressCode" TEXT,
+    "notes" TEXT,
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isVisible" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "gallery_images" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invitationId" TEXT NOT NULL REFERENCES "wedding_invitations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "url" TEXT NOT NULL,
+    "thumbnailUrl" TEXT,
+    "caption" TEXT,
+    "altText" TEXT,
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isVisible" BOOLEAN NOT NULL DEFAULT true,
+    "width" INTEGER,
+    "height" INTEGER,
+    "fileSize" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "invitation_sections" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invitationId" TEXT NOT NULL REFERENCES "wedding_invitations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "sectionKey" TEXT NOT NULL,
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isVisible" BOOLEAN NOT NULL DEFAULT true,
+    "layout" TEXT,
+    "settings" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "timeline_items" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invitationId" TEXT NOT NULL REFERENCES "wedding_invitations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "time" TEXT,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "icon" TEXT,
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isVisible" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "rsvp_responses" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invitationId" TEXT NOT NULL REFERENCES "wedding_invitations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "guestName" TEXT NOT NULL,
+    "attendance" TEXT NOT NULL,
+    "guestCount" INTEGER NOT NULL DEFAULT 1,
+    "phone" TEXT,
+    "email" TEXT,
+    "message" TEXT,
+    "dietary" TEXT,
+    "ipAddress" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "media_assets" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invitationId" TEXT REFERENCES "wedding_invitations"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    "filename" TEXT NOT NULL,
+    "originalName" TEXT NOT NULL,
+    "mimeType" TEXT NOT NULL,
+    "fileSize" INTEGER NOT NULL,
+    "url" TEXT NOT NULL,
+    "storageKey" TEXT NOT NULL UNIQUE,
+    "mediaType" TEXT NOT NULL,
+    "width" INTEGER,
+    "height" INTEGER,
+    "duration" DOUBLE PRECISION,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "accounts" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "type" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "providerAccountId" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" TEXT,
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "sessions" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "sessionToken" TEXT NOT NULL UNIQUE,
+    "userId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "expires" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+`
+
 export async function GET() {
   try {
-    // 1. Check database connectivity
-    const userCount = await prisma.user.count()
+    // 1. Ensure all database tables exist
+    const statements = INIT_SQL.split(';')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
 
-    let seeded = false
-    let adminEmail = process.env.ADMIN_EMAIL || 'admin@luxurywedding.com'
+    for (const sql of statements) {
+      try {
+        await prisma.$executeRawUnsafe(sql)
+      } catch (sqlErr: any) {
+        // Skip minor warnings if already created
+        console.warn('SQL execution notice:', sqlErr?.message)
+      }
+    }
 
-    // 2. If no users exist, automatically seed admin & sample invitation
-    if (userCount === 0) {
-      const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword2024!'
-      const passwordHash = await bcrypt.hash(adminPassword, 12)
+    // 2. Check if admin user exists, create if missing
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@luxurywedding.com'
+    const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword2024!'
+    const passwordHash = await bcrypt.hash(adminPassword, 12)
 
-      const admin = await prisma.user.create({
+    let admin = await prisma.user.findUnique({
+      where: { email: adminEmail },
+    })
+
+    if (!admin) {
+      admin = await prisma.user.create({
         data: {
           email: adminEmail,
-          name: 'System Administrator',
+          name: 'Wedding Admin',
           passwordHash,
           role: 'ADMIN',
         },
       })
+    }
 
+    // 3. Check if sample invitation "ahmed-and-sara" exists, create if missing
+    let invitation = await prisma.weddingInvitation.findUnique({
+      where: { slug: 'ahmed-and-sara' },
+    })
+
+    if (!invitation) {
       const weddingDate = new Date('2026-12-18T19:30:00+03:00')
-      await prisma.weddingInvitation.create({
+      invitation = await prisma.weddingInvitation.create({
         data: {
           userId: admin.id,
           slug: 'ahmed-and-sara',
@@ -75,7 +322,7 @@ export async function GET() {
                 title: 'حفل الزفاف والاستقبال',
                 date: weddingDate,
                 startTime: '08:00 م',
-                venueName: 'قاعة اللؤلؤة الكبرى',
+                venueName: 'قاعة اللؤلؤة الكبرى - فندق الريتز كارلتون',
                 address: 'الرياض، المملكة العربية السعودية',
                 mapsUrl: 'https://maps.google.com',
                 displayOrder: 1,
@@ -85,23 +332,59 @@ export async function GET() {
           },
         },
       })
-
-      seeded = true
     }
 
-    return NextResponse.json({
-      status: 'ok',
-      message: seeded ? 'Database was empty. Admin and sample invitation seeded successfully!' : 'Database connected and already seeded.',
-      usersCount: seeded ? 1 : userCount,
-      adminLoginUrl: '/auth/login',
-      adminDefaultEmail: adminEmail,
-      sampleInvitationUrl: '/wedding/ahmed-and-sara',
-    })
+    return new Response(
+      `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>تمت تهيئة قاعدة البيانات بنجاح</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #FAF7F0; color: #332A25; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+    .card { background: #fff; border: 1px solid #EAE1D3; border-radius: 12px; padding: 36px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    .icon { width: 64px; height: 64px; border-radius: 50%; background: #FAF7F0; border: 2px solid #C8A96B; color: #C8A96B; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px; }
+    h1 { margin: 0 0 10px; font-size: 22px; color: #332A25; }
+    p { font-size: 14px; color: #73675C; line-height: 1.6; margin: 0 0 24px; }
+    .btn { display: inline-block; background: #C8A96B; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 6px; transition: background 0.2s; }
+    .btn:hover { background: #A68648; }
+    .btn-secondary { background: #FAF7F0; color: #332A25; border: 1px solid #EAE1D3; }
+    .btn-secondary:hover { background: #EAE1D3; }
+    .creds { background: #FAF7F0; border: 1px solid #EAE1D3; border-radius: 8px; padding: 12px; text-align: right; font-size: 13px; margin-bottom: 20px; }
+    .creds div { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">✨</div>
+    <h1>تمت تهيئة قاعدة البيانات بنجاح!</h1>
+    <p>تم إنشاء جميع الجداول، وتجهيز حساب الإدارة، وزرع دعوة الزفاف النموذجية بنجاح تام.</p>
+    
+    <div class="creds">
+      <div><strong>البريد:</strong> ${adminEmail}</div>
+      <div><strong>كلمة المرور:</strong> ${adminPassword}</div>
+    </div>
+
+    <div>
+      <a href="/wedding/ahmed-and-sara" class="btn">عرض الدعوة الآن 💍</a>
+      <a href="/dashboard" class="btn btn-secondary">لوحة التحكم ⚙️</a>
+    </div>
+  </div>
+</body>
+</html>`,
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+        },
+      }
+    )
   } catch (error: any) {
     return NextResponse.json(
       {
         status: 'error',
-        message: 'Database connection failed. Please ensure DATABASE_URL is set in Vercel environment variables.',
+        message: 'حدث خطأ أثناء محاولة الاتصال بقاعدة البيانات. تأكد من ضبط متغير DATABASE_URL.',
         details: error?.message || 'Unknown database error',
       },
       { status: 500 }

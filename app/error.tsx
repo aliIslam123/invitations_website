@@ -43,7 +43,7 @@ export default function RootError({
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <button
             type="button"
             onClick={() => {
@@ -56,12 +56,19 @@ export default function RootError({
             <span>إعادة المحاولة</span>
           </button>
 
+          <a
+            href="/api/setup"
+            className="px-4 py-2.5 rounded text-xs font-semibold text-[#332A25] bg-[#FAF7F0] hover:bg-[#EAE1D3] transition-colors border border-[#C8A96B]/50 flex items-center gap-2 cursor-pointer"
+          >
+            <span>تفعيل قاعدة البيانات (Setup)</span>
+          </a>
+
           <button
             type="button"
             onClick={() => {
               window.location.href = '/dashboard'
             }}
-            className="px-4 py-2.5 rounded text-xs font-semibold text-[#332A25] bg-[#FAF7F0] hover:bg-[#EAE1D3] transition-colors border border-[#EAE1D3] flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2.5 rounded text-xs font-semibold text-[#73675C] hover:text-[#332A25] transition-colors flex items-center gap-2 cursor-pointer"
           >
             <Home className="w-3.5 h-3.5" />
             <span>لوحة التحكم</span>

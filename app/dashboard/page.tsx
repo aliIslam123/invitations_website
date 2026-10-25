@@ -15,36 +15,74 @@ import {
 } from 'lucide-react'
 
 export default async function DashboardOverviewPage() {
-  // Fetch real statistics from database
-  const [
-    totalInvitations,
-    publishedCount,
-    draftCount,
-    totalRsvps,
-    rsvpSummary,
-    recentInvitations,
-  ] = await Promise.all([
-    prisma.weddingInvitation.count(),
-    prisma.weddingInvitation.count({ where: { status: 'PUBLISHED' } }),
-    prisma.weddingInvitation.count({ where: { status: 'DRAFT' } }),
-    prisma.rSVPResponse.count(),
-    prisma.rSVPResponse.findMany({
-      select: {
-        attendance: true,
-        guestCount: true,
-      },
-    }),
-    prisma.weddingInvitation.findMany({
-      take: 5,
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        couple: true,
-        _count: {
-          select: { rsvpResponses: true, events: true },
+  let totalInvitations = 0
+  let publishedCount = 0
+  let draftCount = 0
+  let totalRsvps = 0
+  let rsvpSummary: any[] = []
+  let recentInvitations: any[] = []
+  let dbError: string | null = null
+
+  try {
+    const results = await Promise.all([
+      prisma.weddingInvitation.count(),
+      prisma.weddingInvitation.count({ where: { status: 'PUBLISHED' } }),
+      prisma.weddingInvitation.count({ where: { status: 'DRAFT' } }),
+      prisma.rSVPResponse.count(),
+      prisma.rSVPResponse.findMany({
+        select: {
+          attendance: true,
+          guestCount: true,
         },
-      },
-    }),
-  ])
+      }),
+      prisma.weddingInvitation.findMany({
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          couple: true,
+          _count: {
+            select: { rsvpResponses: true, events: true },
+          },
+        },
+      }),
+    ])
+
+    totalInvitations = results[0]
+    publishedCount = results[1]
+    draftCount = results[2]
+    totalRsvps = results[3]
+    rsvpSummary = results[4]
+    recentInvitations = results[5]
+  } catch (err: any) {
+    console.error('Dashboard data fetch error:', err)
+    dbError = err?.message || 'Database error'
+  }
+
+  if (dbError) {
+    return (
+      <div className="p-8 max-w-xl mx-auto my-12 bg-white rounded-lg border border-[#EAE1D3] shadow-md text-center space-y-6">
+        <div className="w-14 h-14 rounded-full bg-[#FAF7F0] border border-[#C8A96B] mx-auto flex items-center justify-center text-[#C8A96B] text-2xl">
+          ✨
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-lg font-bold text-[#332A25]">
+            تفعيل قاعدة البيانات لأول مرة
+          </h3>
+          <p className="text-xs text-[#918579] leading-relaxed">
+            قاعدة البيانات بحاجة إلى تفعيل الجداول وزرع الحساب الإداري والدعوة النموذجية. اضغط على الزر التالي للتفعيل الفوري:
+          </p>
+        </div>
+        <div>
+          <a
+            href="/api/setup"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-xs"
+          >
+            <span>تهيئة وتفعيل قاعدة البيانات (1-Click Setup) 🚀</span>
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   // Calculate confirmed guests total
   const confirmedGuests = rsvpSummary
