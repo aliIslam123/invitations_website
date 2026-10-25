@@ -369,6 +369,130 @@ async function main() {
     },
   })
 
+  // 3. Create sample invitation: "mohamed-and-asmaa" (محمد وأسماء)
+  const weddingDateMohamed = new Date('2026-11-16T19:00:00+02:00')
+
+  await prisma.weddingInvitation.upsert({
+    where: { slug: 'mohamed-and-asmaa' },
+    update: {},
+    create: {
+      userId: admin.id,
+      slug: 'mohamed-and-asmaa',
+      status: 'PUBLISHED',
+      title: 'دعوة زفاف محمد وأسماء | Mohamed & Asmaa Wedding',
+      language: 'both',
+      direction: 'rtl',
+      coverEnabled: true,
+      coverType: 'cinematic',
+      coverImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80',
+      coverOverlayColor: '#1A1410',
+      coverOverlayOpacity: 0.55,
+      coverMonogram: 'M & A',
+      themeId: 'royal-champagne',
+      animationPreset: 'cinematic',
+      seoTitle: 'دعوة زفاف محمد وأسماء - فرحة العمر',
+      seoDescription: 'نتشرف بدعوتكم لحضور حفل زفاف محمد وأسماء يوم الاثنين 16/11/2026 في قاعة ليلتي بنادي اتحاد الشرطة',
+      whatsappMessage: 'يسعدنا ويشرفنا دعوتكم لحضور حفل زفافنا ومشاركتنا فرحتنا الكبرى ❤️\n\nيوم الاثنين 16/11/2026 - الساعة 7:00 مساءً\nنادي اتحاد الشرطة صلاح سالم خلف مسجد الشرطة (قاعة ليلتي)\n\nتفاصيل الحفل والموقع من خلال الرابط:\n[INVITATION_URL]',
+      musicEnabled: true,
+      musicTitle: 'Canon in D - Romantic Acoustic',
+      musicUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-wedding-piano-112191.mp3',
+      rsvpEnabled: true,
+      rsvpDeadline: new Date('2026-11-14T23:59:59+02:00'),
+      rsvpMaxGuests: 4,
+      rsvpAllowPlusOne: true,
+      rsvpConfirmMsg: 'تم تأكيد حضوركم بكل سرور، ننتظركم لنحتفل سوياً!',
+      rsvpDeclineMsg: 'نشكركم على إشعارنا وسنفتقد وجودكم معنا، دعواتكم لنا بالتوفيق.',
+      couple: {
+        create: {
+          brideFirstName: 'أسماء',
+          brideLastName: '',
+          brideFullName: 'أسماء',
+          groomFirstName: 'محمد',
+          groomLastName: '',
+          groomFullName: 'محمد',
+          monogram: 'M & A',
+          weddingDate: weddingDateMohamed,
+          weddingTime: '07:00 مساءً',
+          timezone: 'Africa/Cairo',
+          heroLayout: 'cinematic',
+          heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80',
+          messageHeading: 'بسم الله الرحمن الرحيم',
+          messageBody: 'بكل مشاعر الود والامتنان، نتشرف بدعوتكم لمشاركتنا فرحتنا الغامرة في ليلة من أجمل ليالي العمر، لتكتمل سعادتنا بحضوركم الكريم ودعواتكم الصادقة لبداية رحلتنا معاً.',
+          invitationText: 'دعوة لحضور حفل الزفاف المبارك',
+          invitationSubtext: 'وبحضوركم يكتمل الفرح وتتوج أجمل اللحظات',
+          dressCodeEnabled: true,
+          dressCodeContent: 'الزي الرسمي الفاخر / ملابس السهرة الأنيقة',
+          giftInfoEnabled: true,
+          giftInfoContent: 'حضوركم ومشاركتكم فرحتنا هي أجمل وأثمن هدية لنا.',
+          wishesEnabled: true,
+        },
+      },
+      events: {
+        create: [
+          {
+            title: 'حفل الزفاف والاستقبال (Wedding Ceremony & Reception)',
+            date: weddingDateMohamed,
+            startTime: '07:00 م',
+            endTime: '11:30 م',
+            venueName: 'قاعة ليلتي - نادي اتحاد الشرطة',
+            address: 'شارع صلاح سالم، خلف مسجد الشرطة، القاهرة',
+            mapsUrl: 'https://maps.app.goo.gl/mmPPrcYeGhn95doW9',
+            description: 'استقبال الضيوف الكرام وبداية مراسم حفل الزفاف والاحتفال بحضوركم الكريم.',
+            dressCode: 'الزي الرسمي الفاخر / فساتين السهرة',
+            displayOrder: 1,
+            isVisible: true,
+          },
+        ],
+      },
+      timeline: {
+        create: [
+          {
+            time: '07:00 م',
+            title: 'استقبال الضيوف الكرام',
+            description: 'الترحيب بالضيوف وتقديم الضيافة الافتتاحية',
+            icon: 'heart',
+            displayOrder: 1,
+            isVisible: true,
+          },
+          {
+            time: '08:00 م',
+            title: 'زفة العروسين وبداية الحفل',
+            description: 'دخول العروسين وبداية الفقرات الاحتفالية',
+            icon: 'sparkles',
+            displayOrder: 2,
+            isVisible: true,
+          },
+          {
+            time: '09:30 م',
+            title: 'بوفيه العشاء الفاخر',
+            description: 'تقديم العشاء الملكي لضيوفنا الكرام',
+            icon: 'glass',
+            displayOrder: 3,
+            isVisible: true,
+          },
+          {
+            time: '10:30 م',
+            title: 'تقطيع التورتة والصور التذكارية',
+            description: 'مشاركة أجمل اللحظات والتقاط الصور مع العروسين',
+            icon: 'camera',
+            displayOrder: 4,
+            isVisible: true,
+          },
+        ],
+      },
+      sections: {
+        create: [
+          { sectionKey: 'hero', displayOrder: 1, isVisible: true },
+          { sectionKey: 'message', displayOrder: 2, isVisible: true },
+          { sectionKey: 'countdown', displayOrder: 3, isVisible: true },
+          { sectionKey: 'events', displayOrder: 4, isVisible: true },
+          { sectionKey: 'timeline', displayOrder: 5, isVisible: true },
+          { sectionKey: 'rsvp', displayOrder: 6, isVisible: true },
+        ],
+      },
+    },
+  })
+
   console.log(`✅ Sample invitations seeded successfully!`)
   console.log(`   - http://localhost:3000/wedding/ahmed-and-sara`)
   console.log(`   - http://localhost:3000/wedding/noah-and-emma`)
