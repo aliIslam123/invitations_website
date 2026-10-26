@@ -249,7 +249,7 @@ export function LiveVisualBuilder({
         const data = await res.json()
         if (data.invitation) {
           // Merge to avoid race conditions with recent in-memory keystrokes
-          setInvitation((prev) => ({
+          setInvitation((prev: any) => ({
             ...prev,
             id: data.invitation.id,
             status: data.invitation.status || prev.status,
@@ -1453,7 +1453,7 @@ export function LiveVisualBuilder({
                             isVisible: true,
                           })
                         }
-                        setInvitation((prev) => ({
+                        setInvitation((prev: any) => ({
                           ...prev,
                           couple: updatedCouple,
                           sections: updatedSections,
