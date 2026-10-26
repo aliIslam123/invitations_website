@@ -488,6 +488,9 @@ export async function GET() {
       await prisma.weddingEvent.updateMany({
         where: { invitationId: existingMohamedInv.id },
         data: {
+          date: weddingDateMohamed,
+          startTime: '07:00 م',
+          endTime: '11:30 م',
           notes: 'hideDressCode',
           venueName: 'قاعة ليلتي - نادي اتحاد الشرطة',
           address: 'شارع صلاح سالم، خلف مسجد الشرطة، القاهرة',

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Calendar, Clock, MapPin, Navigation, ExternalLink, Sparkles, Shirt } from 'lucide-react'
 import { ThemeConfig } from '@/lib/themes'
 import { AnimationPreset, getFadeUpVariants } from '@/lib/animations'
-import { buildMapsUrl } from '@/lib/utils'
+import { buildMapsUrl, parseSafeDate } from '@/lib/utils'
 
 export interface EventItem {
   id: string
@@ -29,6 +29,7 @@ export interface EventItem {
 
 interface EventsSectionProps {
   events: EventItem[]
+  weddingDate?: Date | string | null
   sectionTitle?: string | null
   sectionSubtitle?: string | null
   showLocationCard?: boolean
@@ -39,6 +40,7 @@ interface EventsSectionProps {
 
 export function EventsSection({
   events,
+  weddingDate,
   sectionTitle,
   sectionSubtitle,
   showLocationCard = true,
@@ -94,18 +96,20 @@ export function EventsSection({
         {/* Events List */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {visibleEvents.map((event, index) => {
-            const formattedDate =
-              event.date && !isNaN(new Date(event.date).getTime())
-                ? new Date(event.date).toLocaleDateString(
-                    isRtl ? 'ar-SA' : 'en-US',
-                    {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    }
-                  )
-                : ''
+            const effectiveDate = event.date || weddingDate
+            const parsed = parseSafeDate(effectiveDate)
+            const formattedDate = parsed
+              ? parsed.toLocaleDateString(
+                  isRtl ? 'ar-EG' : 'en-US',
+                  {
+                    calendar: 'gregory',
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  }
+                )
+              : ''
 
             const destinationUrl = buildMapsUrl({
               mapsUrl: event.mapsUrl,

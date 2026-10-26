@@ -4,6 +4,7 @@ import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Calendar as CalendarIcon, Heart, Download } from 'lucide-react'
 import { ThemeConfig } from '@/lib/themes'
+import { parseSafeDate } from '@/lib/utils'
 
 interface WeddingCalendarCardProps {
   weddingDate: Date | string | null | undefined
@@ -19,9 +20,7 @@ export function WeddingCalendarCard({
   className = '',
 }: WeddingCalendarCardProps) {
   const dateObj = useMemo(() => {
-    if (!weddingDate) return null
-    const d = typeof weddingDate === 'string' ? new Date(weddingDate) : weddingDate
-    return isNaN(d.getTime()) ? null : d
+    return parseSafeDate(weddingDate)
   }, [weddingDate])
 
   if (!dateObj) return null

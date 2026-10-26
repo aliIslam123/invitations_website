@@ -50,7 +50,7 @@ import { InvitationRenderer } from '@/components/invitation/InvitationRenderer'
 import { WeddingCalendarCard } from '@/components/invitation/WeddingCalendarCard'
 import { THEMES, getAllThemes, getTheme } from '@/lib/themes'
 import { ANIMATION_PRESETS } from '@/lib/animations'
-import { getInvitationUrl } from '@/lib/utils'
+import { getInvitationUrl, formatSafeArabicDate } from '@/lib/utils'
 import { WEDDING_MUSIC_PRESETS } from '@/lib/musicPresets'
 
 interface LiveVisualBuilderProps {
@@ -327,13 +327,18 @@ export function LiveVisualBuilder({
 
   // Event Handlers
   const handleAddEvent = () => {
+    const mainDate = invitation.couple?.weddingDate
+      ? (typeof invitation.couple.weddingDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(invitation.couple.weddingDate)
+          ? invitation.couple.weddingDate
+          : new Date(invitation.couple.weddingDate).toISOString().split('T')[0])
+      : '2026-11-16'
     const newEv = {
       id: `ev-${Date.now()}`,
       title: 'حفل الزفاف والعشاء الملكي',
       venueName: 'قاعة ليلتي للاحتفالات',
       address: 'شارع صلاح سالم، خلف مسجد الشرطة، القاهرة',
-      date: invitation.couple?.weddingDate || new Date().toISOString().split('T')[0],
-      startTime: '07:00 مساءً',
+      date: mainDate,
+      startTime: invitation.couple?.weddingTime || '07:00 مساءً',
       endTime: '11:30 مساءً',
       mapsUrl: 'https://maps.app.goo.gl/mmPPrcYeGhn95doW9',
       description: 'نستقبلكم بكل حب وترحاب لمشاركتنا ليلة العمر ومأدبة العشاء الفاخرة.',
@@ -835,18 +840,40 @@ export function LiveVisualBuilder({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
-                        تاريخ يوم الزفاف *
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-semibold text-[#332A25]">
+                          تاريخ يوم الزفاف *
+                        </label>
+                        {invitation.couple?.weddingDate && (
+                          <span className="text-[10px] text-[#C8A96B] font-bold">
+                            {formatSafeArabicDate(invitation.couple.weddingDate)}
+                          </span>
+                        )}
+                      </div>
                       <input
                         type="date"
                         value={
                           invitation.couple?.weddingDate
-                            ? new Date(invitation.couple.weddingDate).toISOString().split('T')[0]
+                            ? (typeof invitation.couple.weddingDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(invitation.couple.weddingDate)
+                                ? invitation.couple.weddingDate
+                                : new Date(invitation.couple.weddingDate).toISOString().split('T')[0])
                             : ''
                         }
-                        onChange={(e) => updateCoupleField('weddingDate', e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
+                        onChange={(e) => {
+                          const newDate = e.target.value
+                          const currentCouple = invitation.couple || {}
+                          const currentEvents = [...(invitation.events || [])]
+                          if (currentEvents.length > 0) {
+                            currentEvents[0] = { ...currentEvents[0], date: newDate }
+                          }
+                          setInvitation((prev: any) => ({
+                            ...prev,
+                            couple: { ...currentCouple, weddingDate: newDate },
+                            events: currentEvents,
+                          }))
+                          setHasUnsavedChanges(true)
+                        }}
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] font-semibold"
                       />
                     </div>
 
@@ -857,7 +884,20 @@ export function LiveVisualBuilder({
                       <input
                         type="text"
                         value={invitation.couple?.weddingTime || ''}
-                        onChange={(e) => updateCoupleField('weddingTime', e.target.value)}
+                        onChange={(e) => {
+                          const newTime = e.target.value
+                          const currentCouple = invitation.couple || {}
+                          const currentEvents = [...(invitation.events || [])]
+                          if (currentEvents.length > 0 && !currentEvents[0].startTime) {
+                            currentEvents[0] = { ...currentEvents[0], startTime: newTime }
+                          }
+                          setInvitation((prev: any) => ({
+                            ...prev,
+                            couple: { ...currentCouple, weddingTime: newTime },
+                            events: currentEvents,
+                          }))
+                          setHasUnsavedChanges(true)
+                        }}
                         placeholder="مثال: 07:00 مساءً"
                         className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
                       />
@@ -1576,6 +1616,52 @@ export function LiveVisualBuilder({
                               placeholder="11:30 مساءً"
                               className="w-full px-2 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
                             />
+                          </div>
+                        </div>
+
+                        {/* Event Date Control */}
+                        <div className="p-3 bg-[#FAF7F0] rounded border border-[#EAE1D3] space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-[11px] font-bold text-[#332A25]">
+                              📅 تاريخ ويوم الفعالية:
+                            </label>
+                            {invitation.couple?.weddingDate && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const mainDate =
+                                    typeof invitation.couple.weddingDate === 'string' &&
+                                    /^\d{4}-\d{2}-\d{2}$/.test(invitation.couple.weddingDate)
+                                      ? invitation.couple.weddingDate
+                                      : new Date(invitation.couple.weddingDate).toISOString().split('T')[0]
+                                  updateEventField(idx, 'date', mainDate)
+                                }}
+                                className="text-[10px] text-[#C8A96B] hover:underline font-bold cursor-pointer"
+                              >
+                                🔄 تعيين نفس موعد الزفاف الرئيسي ({formatSafeArabicDate(invitation.couple.weddingDate)})
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                            <input
+                              type="date"
+                              value={
+                                ev.date
+                                  ? (typeof ev.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ev.date)
+                                      ? ev.date
+                                      : new Date(ev.date).toISOString().split('T')[0])
+                                  : (invitation.couple?.weddingDate
+                                      ? (typeof invitation.couple.weddingDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(invitation.couple.weddingDate)
+                                          ? invitation.couple.weddingDate
+                                          : new Date(invitation.couple.weddingDate).toISOString().split('T')[0])
+                                      : '')
+                              }
+                              onChange={(e) => updateEventField(idx, 'date', e.target.value)}
+                              className="flex-1 px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-semibold"
+                            />
+                            <div className="text-xs font-bold px-3 py-1.5 bg-white rounded border border-[#C8A96B]/40 text-[#C8A96B] text-center shadow-xs">
+                              {formatSafeArabicDate(ev.date || invitation.couple?.weddingDate) || 'حدد التاريخ'}
+                            </div>
                           </div>
                         </div>
 

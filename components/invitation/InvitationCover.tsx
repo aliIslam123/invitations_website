@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, Sparkles, Volume2, ArrowDown } from 'lucide-react'
 import { ThemeConfig } from '@/lib/themes'
 import { AnimationPreset } from '@/lib/animations'
+import { parseSafeDate } from '@/lib/utils'
 
 interface InvitationCoverProps {
   brideName: string
@@ -44,8 +45,10 @@ export function InvitationCover({
     onOpen()
   }
 
-  const formattedDate = weddingDate
-    ? new Date(weddingDate).toLocaleDateString(isRtl ? 'ar-SA' : 'en-US', {
+  const parsedDate = parseSafeDate(weddingDate)
+  const formattedDate = parsedDate
+    ? parsedDate.toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', {
+        calendar: 'gregory',
         year: 'numeric',
         month: 'long',
         day: 'numeric',

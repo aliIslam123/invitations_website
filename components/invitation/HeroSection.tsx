@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Calendar, Clock, MapPin, ChevronDown, Sparkles, CheckCircle2 } from 'lucide-react'
 import { ThemeConfig } from '@/lib/themes'
 import { AnimationPreset, getFadeUpVariants, getStaggerContainerVariants } from '@/lib/animations'
+import { parseSafeDate } from '@/lib/utils'
 
 interface HeroSectionProps {
   layout?: string
@@ -46,15 +47,16 @@ export function HeroSection({
   const containerVariants = getStaggerContainerVariants(preset)
   const itemVariants = getFadeUpVariants(preset)
 
-  const formattedDate =
-    weddingDate && !isNaN(new Date(weddingDate).getTime())
-      ? new Date(weddingDate).toLocaleDateString(isRtl ? 'ar-SA' : 'en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
-      : null
+  const parsedWeddingDate = parseSafeDate(weddingDate)
+  const formattedDate = parsedWeddingDate
+    ? parsedWeddingDate.toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', {
+        calendar: 'gregory',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null
 
   const defaultImage =
     heroImage ||

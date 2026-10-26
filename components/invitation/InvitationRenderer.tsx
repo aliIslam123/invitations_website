@@ -274,6 +274,7 @@ export function InvitationRenderer({
           <EventsSection
             key="events"
             events={invitation.events || []}
+            weddingDate={weddingDate}
             sectionTitle={couple.eventsTitle || (invitation as any).eventsTitle}
             sectionSubtitle={couple.eventsSubtitle || (invitation as any).eventsSubtitle}
             showLocationCard={showLocationCard}

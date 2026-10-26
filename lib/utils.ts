@@ -20,21 +20,61 @@ export function slugify(text: string): string {
 }
 
 /**
- * Format a date with locale support.
+ * Safe date parsing to avoid timezone day-shift bugs (e.g. UTC midnight rolling back to previous day).
+ */
+export function parseSafeDate(dateVal: Date | string | null | undefined): Date | null {
+  if (!dateVal) return null
+  if (dateVal instanceof Date) {
+    return isNaN(dateVal.getTime()) ? null : dateVal
+  }
+  if (typeof dateVal === 'string') {
+    const trimmed = dateVal.trim()
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const parts = trimmed.split('-').map(Number)
+      return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0)
+    }
+    if (/^\d{4}-\d{2}-\d{2}T00:00:00/.test(trimmed)) {
+      const datePart = trimmed.split('T')[0]
+      const parts = datePart.split('-').map(Number)
+      return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0)
+    }
+    const d = new Date(trimmed)
+    return isNaN(d.getTime()) ? null : d
+  }
+  return null
+}
+
+/**
+ * Format a date with locale support and Gregorian calendar enforcement.
  */
 export function formatDate(
   date: Date | string | null | undefined,
-  locale: string = 'ar-SA',
+  locale: string = 'ar-EG',
   options?: Intl.DateTimeFormatOptions
 ): string {
-  if (!date) return ''
-  const d = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(d.getTime())) return ''
+  const d = parseSafeDate(date)
+  if (!d) return ''
   return d.toLocaleDateString(locale, {
+    calendar: 'gregory',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     ...options,
+  })
+}
+
+/**
+ * Format date in Arabic with full weekday and Gregorian month name.
+ */
+export function formatSafeArabicDate(dateVal: Date | string | null | undefined): string {
+  const d = parseSafeDate(dateVal)
+  if (!d) return ''
+  return d.toLocaleDateString('ar-EG', {
+    calendar: 'gregory',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
 }
 
