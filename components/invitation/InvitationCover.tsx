@@ -52,7 +52,7 @@ export function InvitationCover({
       })
     : ''
 
-  const defaultMonogram = monogram || (showMonogram !== false ? `${brideName.charAt(0)} & ${groomName.charAt(0)}` : '')
+  const defaultMonogram = monogram || (showMonogram !== false ? `${groomName.charAt(0)} & ${brideName.charAt(0)}` : '')
 
   return (
     <AnimatePresence>
@@ -169,19 +169,19 @@ export function InvitationCover({
               >
                 {isRtl ? (
                   <>
-                    <span>{brideName}</span>
+                    <span>{groomName}</span>
                     <span className="mx-3 inline-block" style={{ color: theme.colors.primary }}>
                       &
                     </span>
-                    <span>{groomName}</span>
+                    <span>{brideName}</span>
                   </>
                 ) : (
                   <>
-                    <span>{brideName}</span>
+                    <span>{groomName}</span>
                     <span className="mx-3 inline-block font-normal" style={{ color: theme.colors.primary }}>
                       &
                     </span>
-                    <span>{groomName}</span>
+                    <span>{brideName}</span>
                   </>
                 )}
               </h1>

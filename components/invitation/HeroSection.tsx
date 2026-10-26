@@ -108,11 +108,11 @@ export function HeroSection({
               className="text-4xl md:text-5xl font-serif-luxury font-bold mb-4 leading-tight"
               style={{ color: theme.colors.text }}
             >
-              <div>{brideName}</div>
+              <div>{isRtl ? groomName : brideName}</div>
               <div className="text-2xl my-2 font-normal" style={{ color: theme.colors.primary }}>
                 &
               </div>
-              <div>{groomName}</div>
+              <div>{isRtl ? brideName : groomName}</div>
             </motion.h1>
 
             {formattedDate && (
@@ -191,11 +191,11 @@ export function HeroSection({
             className="text-4xl md:text-6xl font-serif-luxury font-light tracking-wide mb-6"
             style={{ color: theme.colors.text }}
           >
-            <span>{brideName}</span>
+            <span>{isRtl ? groomName : brideName}</span>
             <span className="mx-4 font-serif italic font-normal" style={{ color: theme.colors.primary }}>
               &
             </span>
-            <span>{groomName}</span>
+            <span>{isRtl ? brideName : groomName}</span>
           </motion.h1>
 
           <motion.div
@@ -285,11 +285,11 @@ export function HeroSection({
               className="text-3xl md:text-5xl font-arabic-luxury font-bold leading-relaxed"
               style={{ color: theme.colors.text }}
             >
-              <span>{brideName}</span>
+              <span>{groomName}</span>
               <span className="block text-2xl md:text-3xl my-2 font-normal" style={{ color: theme.colors.primary }}>
                 وَ
               </span>
-              <span>{groomName}</span>
+              <span>{brideName}</span>
             </h1>
           </motion.div>
 
@@ -386,11 +386,11 @@ export function HeroSection({
           variants={itemVariants}
           className="text-4xl sm:text-5xl md:text-7xl font-serif-luxury font-bold tracking-wide leading-tight mb-6 drop-shadow-md"
         >
-          <span className="inline-block">{brideName}</span>
+          <span className="inline-block">{isRtl ? groomName : brideName}</span>
           <span className="mx-3 md:mx-6 font-normal inline-block text-[#DFCA9B] font-serif italic text-3xl md:text-5xl">
             &
           </span>
-          <span className="inline-block">{groomName}</span>
+          <span className="inline-block">{isRtl ? brideName : groomName}</span>
         </motion.h1>
 
         {/* Subtle Decorative Gold Divider */}

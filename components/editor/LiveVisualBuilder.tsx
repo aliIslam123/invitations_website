@@ -235,6 +235,7 @@ export function LiveVisualBuilder({
     try {
       const payload = {
         ...invitation,
+        sections,
         status: statusOverride || invitation.status,
       }
 
@@ -247,7 +248,13 @@ export function LiveVisualBuilder({
       if (res.ok) {
         const data = await res.json()
         if (data.invitation) {
-          setInvitation(data.invitation)
+          // Merge to avoid race conditions with recent in-memory keystrokes
+          setInvitation((prev) => ({
+            ...prev,
+            id: data.invitation.id,
+            status: data.invitation.status || prev.status,
+            slug: data.invitation.slug || prev.slug,
+          }))
         } else if (statusOverride) {
           updateInvitationField('status', statusOverride)
         }
@@ -291,17 +298,23 @@ export function LiveVisualBuilder({
 
   // Section visibility and reordering handlers
   const sections = useMemo(() => {
-    const list = invitation.sections || [
-      { sectionKey: 'hero', displayOrder: 0, isVisible: true },
-      { sectionKey: 'message', displayOrder: 1, isVisible: true },
-      { sectionKey: 'countdown', displayOrder: 2, isVisible: true },
-      { sectionKey: 'events', displayOrder: 3, isVisible: true },
-      { sectionKey: 'timeline', displayOrder: 4, isVisible: true },
-      { sectionKey: 'gallery', displayOrder: 5, isVisible: true },
-      { sectionKey: 'rsvp', displayOrder: 6, isVisible: true },
-      { sectionKey: 'additional', displayOrder: 7, isVisible: true },
+    const list = [...(invitation.sections || [])]
+    const defaultSections = [
+      'hero',
+      'message',
+      'countdown',
+      'events',
+      'timeline',
+      'gallery',
+      'rsvp',
+      'additional',
     ]
-    return [...list].sort((a, b) => a.displayOrder - b.displayOrder)
+    for (const key of defaultSections) {
+      if (!list.some((s) => s.sectionKey === key)) {
+        list.push({ sectionKey: key, displayOrder: list.length, isVisible: true })
+      }
+    }
+    return list.sort((a, b) => a.displayOrder - b.displayOrder)
   }, [invitation.sections])
 
   const isEventsSectionVisible = sections.find((s) => s.sectionKey === 'events')?.isVisible !== false
@@ -704,20 +717,21 @@ export function LiveVisualBuilder({
 
           {invitation.status === 'PUBLISHED' && (
             <a
-              href={publicUrl}
+              href={`${publicUrl}?v=${Date.now()}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={async (e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault()
                   await handleSave()
-                  window.open(publicUrl, '_blank')
+                  window.open(`${publicUrl}?v=${Date.now()}`, '_blank')
                 }
               }}
-              className="p-2 rounded border border-[#EAE1D3] text-[#332A25] hover:bg-[#FAF7F0] transition-colors"
-              title="فتح الرابط العام الفعلي"
+              className="px-2.5 py-1.5 rounded border border-[#EAE1D3] text-[#332A25] hover:bg-[#FAF7F0] transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
+              title="فتح الرابط المباشر للدعوة"
             >
-              <ExternalLink className="w-4 h-4 text-[#C8A96B]" />
+              <ExternalLink className="w-3.5 h-3.5 text-[#C8A96B]" />
+              <span className="hidden sm:inline">رابط الدعوة المباشر</span>
             </a>
           )}
 
@@ -811,32 +825,6 @@ export function LiveVisualBuilder({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold mb-1 text-[#332A25]">
-                      اسم العروس
-                    </label>
-                    <input
-                      type="text"
-                      value={invitation.couple?.brideFirstName || ''}
-                      onChange={(e) => updateCoupleField('brideFirstName', e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
-                      عائلة العروس
-                    </label>
-                    <input
-                      type="text"
-                      value={invitation.couple?.brideLastName || ''}
-                      onChange={(e) => updateCoupleField('brideLastName', e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
                       اسم العريس
                     </label>
                     <input
@@ -855,6 +843,32 @@ export function LiveVisualBuilder({
                       type="text"
                       value={invitation.couple?.groomLastName || ''}
                       onChange={(e) => updateCoupleField('groomLastName', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
+                      اسم العروس
+                    </label>
+                    <input
+                      type="text"
+                      value={invitation.couple?.brideFirstName || ''}
+                      onChange={(e) => updateCoupleField('brideFirstName', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
+                      عائلة العروس
+                    </label>
+                    <input
+                      type="text"
+                      value={invitation.couple?.brideLastName || ''}
+                      onChange={(e) => updateCoupleField('brideLastName', e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
                     />
                   </div>
@@ -1421,7 +1435,31 @@ export function LiveVisualBuilder({
                     </div>
                     <button
                       type="button"
-                      onClick={() => updateCoupleField('dressCodeEnabled', !invitation.couple?.dressCodeEnabled)}
+                      onClick={() => {
+                        const nextVal = !Boolean(invitation.couple?.dressCodeEnabled)
+                        const currentCouple = invitation.couple || {}
+                        const updatedCouple = {
+                          ...currentCouple,
+                          dressCodeEnabled: nextVal,
+                          dressCodeContent: currentCouple.dressCodeContent || 'نرجو التكرم بالالتزام بالزي الرسمي الكامل (بدلة كاملة للرجال، فساتين سواريه للسيدات)',
+                        }
+                        const updatedSections = sections.map((s) =>
+                          s.sectionKey === 'additional' ? { ...s, isVisible: true } : s
+                        )
+                        if (!updatedSections.some((s) => s.sectionKey === 'additional')) {
+                          updatedSections.push({
+                            sectionKey: 'additional',
+                            displayOrder: updatedSections.length,
+                            isVisible: true,
+                          })
+                        }
+                        setInvitation((prev) => ({
+                          ...prev,
+                          couple: updatedCouple,
+                          sections: updatedSections,
+                        }))
+                        setHasUnsavedChanges(true)
+                      }}
                       className={`px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer border flex items-center gap-1.5 ${
                         invitation.couple?.dressCodeEnabled
                           ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/40 shadow-xs'
@@ -2870,41 +2908,37 @@ export function LiveVisualBuilder({
                                 الزي الرسمي للفعالية (Dress Code):
                               </span>
                             </div>
-                            {(() => {
-                              const isEvDressCodeVisible = ev.showDressCode !== false && !ev.notes?.includes('hideDressCode')
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const nextVisible = !isEvDressCodeVisible
-                                    const list = [...(invitation.events || [])]
-                                    let notesStr = (ev.notes || '').split(',').filter((f: string) => f && f !== 'hideDressCode').join(',')
-                                    if (!nextVisible) {
-                                      notesStr = notesStr ? `${notesStr},hideDressCode` : 'hideDressCode'
-                                    }
-                                    list[idx] = { ...list[idx], showDressCode: nextVisible, notes: notesStr || null }
-                                    updateInvitationField('events', list)
-                                  }}
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer border flex items-center gap-1 ${
-                                    isEvDressCodeVisible
-                                      ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/30'
-                                      : 'bg-red-50 text-red-600 border-red-200'
-                                  }`}
-                                >
-                                  {isEvDressCodeVisible ? (
-                                    <>
-                                      <Eye className="w-3 h-3" />
-                                      <span>معروض</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <EyeOff className="w-3 h-3" />
-                                      <span>مخفي</span>
-                                    </>
-                                  )}
-                                </button>
-                              )
-                            })()}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const isVisible = ev.showDressCode !== false && !ev.notes?.includes('hideDressCode')
+                                const nextVisible = !isVisible
+                                const list = [...(invitation.events || [])]
+                                list[idx] = {
+                                  ...list[idx],
+                                  showDressCode: nextVisible,
+                                  notes: nextVisible ? null : 'hideDressCode',
+                                }
+                                updateInvitationField('events', list)
+                              }}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer border flex items-center gap-1 ${
+                                (ev.showDressCode !== false && !ev.notes?.includes('hideDressCode'))
+                                  ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/30'
+                                  : 'bg-red-50 text-red-600 border-red-200'
+                              }`}
+                            >
+                              {(ev.showDressCode !== false && !ev.notes?.includes('hideDressCode')) ? (
+                                <>
+                                  <Eye className="w-3 h-3" />
+                                  <span>معروض</span>
+                                </>
+                              ) : (
+                                <>
+                                  <EyeOff className="w-3 h-3" />
+                                  <span>مخفي</span>
+                                </>
+                              )}
+                            </button>
                           </div>
                           <input
                             type="text"

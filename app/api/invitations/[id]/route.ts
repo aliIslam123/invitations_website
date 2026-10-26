@@ -306,8 +306,12 @@ export async function PUT(
 
     // Replace sections if provided
     if (Array.isArray(sections)) {
+      const hasAdditional = sections.some((s: any) => s.sectionKey === 'additional')
+      const allSections = hasAdditional
+        ? sections
+        : [...sections, { sectionKey: 'additional', displayOrder: sections.length, isVisible: true }]
       await prisma.invitationSection.deleteMany({ where: { invitationId: id } })
-      for (const [idx, sec] of sections.entries()) {
+      for (const [idx, sec] of allSections.entries()) {
         await prisma.invitationSection.create({
           data: {
             invitationId: id,
@@ -337,11 +341,15 @@ export async function PUT(
     // Instant cache revalidation across the platform
     try {
       if (fullUpdated) {
+        revalidatePath(`/wedding/${fullUpdated.slug}`)
         revalidatePath(`/wedding/${fullUpdated.slug}`, 'page')
+        revalidatePath(`/wedding/${fullUpdated.slug}`, 'layout')
         revalidatePath(`/dashboard/invitations/edit/${id}`, 'page')
       }
       if (slug && slug !== fullUpdated?.slug) {
+        revalidatePath(`/wedding/${slug}`)
         revalidatePath(`/wedding/${slug}`, 'page')
+        revalidatePath(`/wedding/${slug}`, 'layout')
       }
       revalidatePath('/dashboard/invitations', 'page')
       revalidatePath('/dashboard', 'page')

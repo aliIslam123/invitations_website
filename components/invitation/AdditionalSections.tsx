@@ -47,7 +47,7 @@ export function AdditionalSections({
     <div className="py-12 px-4 md:px-8 space-y-12" style={{ backgroundColor: theme.colors.background }}>
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Dress Code Card */}
-        {dressCodeEnabled && dressCodeContent && (
+        {dressCodeEnabled && (
           <motion.div
             variants={fadeVariants}
             initial="hidden"
@@ -64,7 +64,7 @@ export function AdditionalSections({
               {isRtl ? 'قواعد الزي (Dress Code)' : 'Dress Code'}
             </h4>
             <p className="text-sm leading-relaxed" style={{ color: theme.colors.textLight }}>
-              {dressCodeContent}
+              {dressCodeContent || (isRtl ? 'نرجو التكرم بالالتزام بالزي الرسمي الكامل' : 'Formal Attire Requested')}
             </p>
           </motion.div>
         )}
@@ -184,7 +184,7 @@ export function AdditionalSections({
           <Heart className="w-4 h-4 fill-current" style={{ color: theme.colors.primary }} />
         </div>
         <h5 className="font-serif-luxury text-xl md:text-2xl font-bold mb-2" style={{ color: theme.colors.text }}>
-          {brideName} & {groomName}
+          {isRtl ? `${groomName} & ${brideName}` : `${brideName} & ${groomName}`}
         </h5>
         <p className="text-xs tracking-widest uppercase opacity-60" style={{ color: theme.colors.textLight }}>
           {isRtl ? 'دعوة زفاف خاصة ومميزة' : 'A Celebration of Love'}

@@ -199,9 +199,10 @@ export function InvitationRenderer({
   // Determine section order from saved sections
   const savedSections = (invitation.sections || []).slice().sort((a, b) => a.displayOrder - b.displayOrder)
   const defaultOrder = ['hero', 'message', 'countdown', 'events', 'timeline', 'gallery', 'rsvp', 'additional']
-  const orderedKeys = savedSections.length > 0 
+  const baseKeys = savedSections.length > 0 
     ? savedSections.filter(s => s.isVisible).map(s => s.sectionKey)
     : defaultOrder
+  const orderedKeys = baseKeys.includes('additional') ? baseKeys : [...baseKeys, 'additional']
 
   const renderSection = (key: string) => {
     switch (key) {
