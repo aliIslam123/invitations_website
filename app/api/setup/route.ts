@@ -461,7 +461,10 @@ export async function GET() {
       })
     }
 
-    // Ensure timeline is disabled and hidden for Mohamed & Asmaa per user request
+    // Specific overrides for Mohamed & Asmaa per user request:
+    // 1. Hide timeline
+    // 2. Hide event dress code
+    // 3. Show location card
     const existingMohamedInv = await prisma.weddingInvitation.findUnique({
       where: { slug: 'mohamed-and-asmaa' },
     })
@@ -473,6 +476,25 @@ export async function GET() {
       await prisma.timelineItem.updateMany({
         where: { invitationId: existingMohamedInv.id },
         data: { isVisible: false },
+      })
+      await prisma.weddingEvent.updateMany({
+        where: { invitationId: existingMohamedInv.id },
+        data: {
+          notes: 'hideDressCode',
+          venueName: 'قاعة ليلتي - نادي اتحاد الشرطة',
+          address: 'شارع صلاح سالم، خلف مسجد الشرطة، القاهرة',
+          mapsUrl: 'https://maps.app.goo.gl/mmPPrcYeGhn95doW9',
+        },
+      })
+      let customJson: any = {}
+      try {
+        customJson = JSON.parse(existingMohamedInv.themeCustom || '{}')
+      } catch {}
+      customJson.showLocationCard = true
+      customJson.timelineVisible = false
+      await prisma.weddingInvitation.update({
+        where: { id: existingMohamedInv.id },
+        data: { themeCustom: JSON.stringify(customJson) },
       })
     }
 
