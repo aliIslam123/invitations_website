@@ -25,6 +25,7 @@ export interface EventItem {
   isVisible: boolean
   showLocationCard?: boolean
   showDressCode?: boolean
+  showEndTime?: boolean
 }
 
 interface EventsSectionProps {
@@ -167,15 +168,24 @@ export function EventsSection({
                     </div>
 
                     {/* Time */}
-                    {(event.startTime || event.endTime) && (
-                      <div className="flex items-center gap-2.5 mb-4 text-sm" style={{ color: theme.colors.textLight }}>
-                        <Clock className="w-4 h-4 shrink-0" style={{ color: theme.colors.primary }} />
-                        <span>
-                          {event.startTime}
-                          {event.endTime ? ` - ${event.endTime}` : ''}
-                        </span>
-                      </div>
-                    )}
+                    {(() => {
+                      const isEndTimeVisible =
+                        event.showEndTime !== false &&
+                        !event.notes?.includes('hideEndTime') &&
+                        Boolean(event.endTime && event.endTime.trim())
+
+                      if (!event.startTime && !isEndTimeVisible) return null
+
+                      return (
+                        <div className="flex items-center gap-2.5 mb-4 text-sm" style={{ color: theme.colors.textLight }}>
+                          <Clock className="w-4 h-4 shrink-0" style={{ color: theme.colors.primary }} />
+                          <span>
+                            {event.startTime}
+                            {isEndTimeVisible ? ` - ${event.endTime}` : ''}
+                          </span>
+                        </div>
+                      )
+                    })()}
 
                     {/* Description */}
                     {event.description && (

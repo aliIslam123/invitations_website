@@ -240,7 +240,7 @@ export async function PUT(
             title: ev.title || 'فعالية بدون عنوان',
             date: ev.date && !isNaN(new Date(ev.date).getTime()) ? new Date(ev.date) : new Date(),
             startTime: ev.startTime || null,
-            endTime: ev.endTime || null,
+            endTime: (ev.showEndTime === false || ev.notes?.includes('hideEndTime') || !ev.endTime) ? null : ev.endTime,
             venueName: ev.venueName || null,
             address: ev.address || null,
             mapsUrl: ev.mapsUrl || null,
@@ -253,7 +253,8 @@ export async function PUT(
               const flags = []
               if (ev.showLocationCard === false) flags.push('hideLocation')
               if (ev.showDressCode === false) flags.push('hideDressCode')
-              const baseNotes = (ev.notes || '').split(',').filter((f: string) => f && f !== 'hideLocation' && f !== 'hideDressCode')
+              if (ev.showEndTime === false || ev.notes?.includes('hideEndTime') || !ev.endTime) flags.push('hideEndTime')
+              const baseNotes = (ev.notes || '').split(',').filter((f: string) => f && f !== 'hideLocation' && f !== 'hideDressCode' && f !== 'hideEndTime')
               const combined = [...flags, ...baseNotes]
               return combined.length > 0 ? combined.join(',') : null
             })(),

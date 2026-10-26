@@ -1578,7 +1578,7 @@ export function LiveVisualBuilder({
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
                               عنوان الفعالية
@@ -1588,35 +1588,114 @@ export function LiveVisualBuilder({
                               value={ev.title || ''}
                               onChange={(e) => updateEventField(idx, 'title', e.target.value)}
                               placeholder="حفل الزفاف الرئيسي"
-                              className="w-full px-2 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-semibold"
+                              className="w-full px-2.5 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-semibold"
                             />
                           </div>
 
                           <div>
                             <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
-                              وقت البداية
+                              وقت بداية الحفل (موعد الحضور)
                             </label>
                             <input
                               type="text"
                               value={ev.startTime || ''}
                               onChange={(e) => updateEventField(idx, 'startTime', e.target.value)}
                               placeholder="07:00 مساءً"
-                              className="w-full px-2 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
+                              className="w-full px-2.5 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
                             />
                           </div>
+                        </div>
 
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
-                              وقت النهاية
-                            </label>
-                            <input
-                              type="text"
-                              value={ev.endTime || ''}
-                              onChange={(e) => updateEventField(idx, 'endTime', e.target.value)}
-                              placeholder="11:30 مساءً"
-                              className="w-full px-2 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white"
-                            />
+                        {/* End Time Control with Show/Hide toggle */}
+                        <div className="p-3 bg-[#FAF7F0] rounded border border-[#EAE1D3] space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-[#C8A96B]" />
+                              <span className="text-[11px] font-bold text-[#332A25]">
+                                وقت نهاية الحفل (اختياري):
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const isVisible =
+                                  ev.showEndTime !== false &&
+                                  !ev.notes?.includes('hideEndTime') &&
+                                  Boolean(ev.endTime && ev.endTime.trim())
+                                const nextVisible = !isVisible
+                                const list = [...(invitation.events || [])]
+                                let currentNotes = (list[idx].notes || '').split(',').filter(Boolean)
+                                if (nextVisible) {
+                                  currentNotes = currentNotes.filter((n: string) => n !== 'hideEndTime')
+                                } else {
+                                  if (!currentNotes.includes('hideEndTime')) currentNotes.push('hideEndTime')
+                                }
+                                list[idx] = {
+                                  ...list[idx],
+                                  showEndTime: nextVisible,
+                                  endTime: nextVisible ? (list[idx].endTime || '11:30 مساءً') : '',
+                                  notes: currentNotes.join(',') || null,
+                                }
+                                updateInvitationField('events', list)
+                              }}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer border flex items-center gap-1 ${
+                                ev.showEndTime !== false &&
+                                !ev.notes?.includes('hideEndTime') &&
+                                Boolean(ev.endTime && ev.endTime.trim())
+                                  ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/30 shadow-xs'
+                                  : 'bg-red-50 text-red-600 border-red-200'
+                              }`}
+                            >
+                              {ev.showEndTime !== false &&
+                              !ev.notes?.includes('hideEndTime') &&
+                              Boolean(ev.endTime && ev.endTime.trim()) ? (
+                                <>
+                                  <Eye className="w-3 h-3" />
+                                  <span>معروض في الدعوة</span>
+                                </>
+                              ) : (
+                                <>
+                                  <EyeOff className="w-3 h-3" />
+                                  <span>مخفي من الدعوة</span>
+                                </>
+                              )}
+                            </button>
                           </div>
+                          {ev.showEndTime !== false &&
+                          !ev.notes?.includes('hideEndTime') &&
+                          Boolean(ev.endTime && ev.endTime.trim()) ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={ev.endTime || ''}
+                                onChange={(e) => updateEventField(idx, 'endTime', e.target.value)}
+                                placeholder="مثال: 11:30 مساءً"
+                                className="w-full px-3 py-1.5 text-xs rounded border border-[#EAE1D3] bg-white font-semibold"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const list = [...(invitation.events || [])]
+                                  let currentNotes = (list[idx].notes || '').split(',').filter(Boolean)
+                                  if (!currentNotes.includes('hideEndTime')) currentNotes.push('hideEndTime')
+                                  list[idx] = {
+                                    ...list[idx],
+                                    showEndTime: false,
+                                    endTime: '',
+                                    notes: currentNotes.join(',') || null,
+                                  }
+                                  updateInvitationField('events', list)
+                                }}
+                                className="text-[10px] text-red-500 hover:underline shrink-0 font-medium cursor-pointer"
+                              >
+                                مسح وإخفاء ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-[#918579]">
+                              وقت نهاية الحفل مخفي، ويظهر في الدعوة موعد البداية فقط. اضغط على الزر بالأعلى إذا رغبت في إظهاره.
+                            </p>
+                          )}
                         </div>
 
                         {/* Event Date Control */}
