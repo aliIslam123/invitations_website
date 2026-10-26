@@ -387,9 +387,9 @@ export async function GET() {
               messageBody: 'بكل مشاعر الود والامتنان، نتشرف بدعوتكم لمشاركتنا فرحتنا الغامرة في ليلة من أجمل ليالي العمر، لتكتمل سعادتنا بحضوركم الكريم ودعواتكم الصادقة لبداية رحلتنا معاً.',
               invitationText: 'دعوة لحضور حفل الزفاف المبارك',
               invitationSubtext: 'وبحضوركم يكتمل الفرح وتتوج أجمل اللحظات',
-              dressCodeEnabled: true,
+              dressCodeEnabled: false,
               dressCodeContent: 'الزي الرسمي الفاخر / ملابس السهرة الأنيقة',
-              giftInfoEnabled: true,
+              giftInfoEnabled: false,
               giftInfoContent: 'حضوركم ومشاركتكم فرحتنا هي أجمل وأثمن هدية لنا.',
               wishesEnabled: true,
             },
@@ -465,6 +465,7 @@ export async function GET() {
     // 1. Hide timeline
     // 2. Hide event dress code
     // 3. Show location card
+    // 4. Hide gift info card and dress code card
     const existingMohamedInv = await prisma.weddingInvitation.findUnique({
       where: { slug: 'mohamed-and-asmaa' },
     })
@@ -476,6 +477,13 @@ export async function GET() {
       await prisma.timelineItem.updateMany({
         where: { invitationId: existingMohamedInv.id },
         data: { isVisible: false },
+      })
+      await prisma.coupleInformation.updateMany({
+        where: { invitationId: existingMohamedInv.id },
+        data: {
+          giftInfoEnabled: false,
+          dressCodeEnabled: false,
+        },
       })
       await prisma.weddingEvent.updateMany({
         where: { invitationId: existingMohamedInv.id },

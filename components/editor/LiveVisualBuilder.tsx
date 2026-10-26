@@ -43,6 +43,7 @@ import {
   MapPin,
   Navigation,
   Shirt,
+  Gift,
   ChevronLeft,
 } from 'lucide-react'
 import { InvitationRenderer } from '@/components/invitation/InvitationRenderer'
@@ -1180,6 +1181,101 @@ export function LiveVisualBuilder({
                             key={presetText}
                             type="button"
                             onClick={() => updateCoupleField('dressCodeContent', presetText)}
+                            className="px-2 py-0.5 text-[10px] bg-white border border-[#EAE1D3] hover:border-[#C8A96B] hover:text-[#C8A96B] rounded transition-colors cursor-pointer"
+                          >
+                            + {presetText}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Gift Information Section */}
+                <div className="p-4 bg-white border-2 border-[#C8A96B]/40 rounded-lg space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Gift className="w-4 h-4 text-[#C8A96B]" />
+                      <span className="text-xs font-bold text-[#332A25]">
+                        معلومات وبطاقة الهدية (Gift Information / Registry):
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextVal = !Boolean(invitation.couple?.giftInfoEnabled)
+                        const currentCouple = invitation.couple || {}
+                        const updatedCouple = {
+                          ...currentCouple,
+                          giftInfoEnabled: nextVal,
+                          giftInfoContent:
+                            currentCouple.giftInfoContent ||
+                            'حضوركم ومشاركتكم فرحتنا هي أجمل وأثمن هدية لنا.',
+                        }
+                        const updatedSections = sections.map((s) =>
+                          s.sectionKey === 'additional' ? { ...s, isVisible: true } : s
+                        )
+                        if (!updatedSections.some((s) => s.sectionKey === 'additional')) {
+                          updatedSections.push({
+                            sectionKey: 'additional',
+                            displayOrder: updatedSections.length,
+                            isVisible: true,
+                          })
+                        }
+                        setInvitation((prev: any) => ({
+                          ...prev,
+                          couple: updatedCouple,
+                          sections: updatedSections,
+                        }))
+                        setHasUnsavedChanges(true)
+                      }}
+                      className={`px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer border flex items-center gap-1.5 ${
+                        invitation.couple?.giftInfoEnabled
+                          ? 'bg-[#10B981]/15 text-[#059669] border-[#10B981]/40 shadow-xs'
+                          : 'bg-red-50 text-red-600 border-red-200'
+                      }`}
+                    >
+                      {invitation.couple?.giftInfoEnabled ? (
+                        <>
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>معروضة في الدعوة</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" />
+                          <span>مخفية من الدعوة</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#918579]">
+                    تحدد للضيوف تفاصيل الهدية أو رسالة رقيقة بأن وجودهم ومشاركتهم الفرحة هي أجمل هدية. تظهر أو تختفي فوراً بضغطة زر.
+                  </p>
+
+                  {invitation.couple?.giftInfoEnabled && (
+                    <div className="space-y-2 pt-1 border-t border-[#EAE1D3]">
+                      <label className="block text-[11px] font-semibold text-[#332A25]">
+                        نص رسالة معلومات الهدية:
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={invitation.couple?.giftInfoContent || ''}
+                        onChange={(e) => updateCoupleField('giftInfoContent', e.target.value)}
+                        placeholder="مثال: حضوركم ومشاركتكم فرحتنا هي أجمل وأثمن هدية لنا..."
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]"
+                      />
+                      {/* Presets */}
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        <span className="text-[10px] text-[#918579] self-center">اقتراحات سريعة:</span>
+                        {[
+                          'حضوركم ومشاركتكم فرحتنا هي أجمل وأثمن هدية لنا.',
+                          'دعواتكم الصادقة وحضوركم الكريم هما أثمن ما نرجوه.',
+                          'فرحتنا تكتمل بلقائكم ورؤيتكم بيننا، ولا نرجو سوى دعواتكم.',
+                        ].map((presetText) => (
+                          <button
+                            key={presetText}
+                            type="button"
+                            onClick={() => updateCoupleField('giftInfoContent', presetText)}
                             className="px-2 py-0.5 text-[10px] bg-white border border-[#EAE1D3] hover:border-[#C8A96B] hover:text-[#C8A96B] rounded transition-colors cursor-pointer"
                           >
                             + {presetText}

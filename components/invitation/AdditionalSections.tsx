@@ -45,53 +45,61 @@ export function AdditionalSections({
 
   return (
     <div className="py-12 px-4 md:px-8 space-y-12" style={{ backgroundColor: theme.colors.background }}>
-      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Dress Code Card */}
-        {dressCodeEnabled && (
-          <motion.div
-            variants={fadeVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="p-8 rounded-sm border text-center shadow-sm"
-            style={{
-              backgroundColor: theme.colors.surface,
-              borderColor: `${theme.colors.primary}33`,
-            }}
-          >
-            <Shirt className="w-8 h-8 mx-auto mb-3" style={{ color: theme.colors.primary }} />
-            <h4 className="text-xl font-serif-luxury font-bold mb-2" style={{ color: theme.colors.text }}>
-              {isRtl ? 'قواعد الزي (Dress Code)' : 'Dress Code'}
-            </h4>
-            <p className="text-sm leading-relaxed" style={{ color: theme.colors.textLight }}>
-              {dressCodeContent || (isRtl ? 'نرجو التكرم بالالتزام بالزي الرسمي الكامل' : 'Formal Attire Requested')}
-            </p>
-          </motion.div>
-        )}
+      {(dressCodeEnabled || giftInfoEnabled) && (
+        <div
+          className={`mx-auto grid gap-8 ${
+            dressCodeEnabled && giftInfoEnabled
+              ? 'max-w-4xl grid-cols-1 md:grid-cols-2'
+              : 'max-w-lg grid-cols-1'
+          }`}
+        >
+          {/* Dress Code Card */}
+          {dressCodeEnabled && (
+            <motion.div
+              variants={fadeVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="p-8 rounded-sm border text-center shadow-sm"
+              style={{
+                backgroundColor: theme.colors.surface,
+                borderColor: `${theme.colors.primary}33`,
+              }}
+            >
+              <Shirt className="w-8 h-8 mx-auto mb-3" style={{ color: theme.colors.primary }} />
+              <h4 className="text-xl font-serif-luxury font-bold mb-2" style={{ color: theme.colors.text }}>
+                {isRtl ? 'قواعد الزي (Dress Code)' : 'Dress Code'}
+              </h4>
+              <p className="text-sm leading-relaxed" style={{ color: theme.colors.textLight }}>
+                {dressCodeContent || (isRtl ? 'نرجو التكرم بالالتزام بالزي الرسمي الكامل' : 'Formal Attire Requested')}
+              </p>
+            </motion.div>
+          )}
 
-        {/* Gift Information Card */}
-        {giftInfoEnabled && giftInfoContent && (
-          <motion.div
-            variants={fadeVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="p-8 rounded-sm border text-center shadow-sm"
-            style={{
-              backgroundColor: theme.colors.surface,
-              borderColor: `${theme.colors.primary}33`,
-            }}
-          >
-            <Gift className="w-8 h-8 mx-auto mb-3" style={{ color: theme.colors.primary }} />
-            <h4 className="text-xl font-serif-luxury font-bold mb-2" style={{ color: theme.colors.text }}>
-              {isRtl ? 'معلومات الهدية' : 'Gift Registry & Wishes'}
-            </h4>
-            <p className="text-sm leading-relaxed" style={{ color: theme.colors.textLight }}>
-              {giftInfoContent}
-            </p>
-          </motion.div>
-        )}
-      </div>
+          {/* Gift Information Card */}
+          {giftInfoEnabled && (
+            <motion.div
+              variants={fadeVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="p-8 rounded-sm border text-center shadow-sm"
+              style={{
+                backgroundColor: theme.colors.surface,
+                borderColor: `${theme.colors.primary}33`,
+              }}
+            >
+              <Gift className="w-8 h-8 mx-auto mb-3" style={{ color: theme.colors.primary }} />
+              <h4 className="text-xl font-serif-luxury font-bold mb-2" style={{ color: theme.colors.text }}>
+                {isRtl ? 'معلومات الهدية' : 'Gift Registry & Wishes'}
+              </h4>
+              <p className="text-sm leading-relaxed" style={{ color: theme.colors.textLight }}>
+                {giftInfoContent || (isRtl ? 'حضوركم ومشاركتكم فرحتنا هي أجمل وأثمن هدية لنا.' : 'Your presence is our greatest gift.')}
+              </p>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* Contact & Inquiries Card */}
       {contactEnabled && (contactPhone || contactWhatsapp) && (
