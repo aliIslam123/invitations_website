@@ -238,8 +238,13 @@ export default function SignInPage(props: SignInPageProps) {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-[#918579]">
+      <footer className="py-4 text-center text-xs text-[#918579] flex flex-wrap items-center justify-center gap-3">
         <span>جميع الحقوق محفوظة © {new Date().getFullYear()} • منصة فرحة العمر</span>
+        <span>•</span>
+        <Link href="/admin/login" className="text-[#A68648] hover:text-[#C8A96B] font-semibold transition-colors flex items-center gap-1">
+          <Shield className="w-3 h-3 text-[#C8A96B]" />
+          <span>بوابة دخول الإدارة (Admin Portal)</span>
+        </Link>
       </footer>
     </div>
   )
