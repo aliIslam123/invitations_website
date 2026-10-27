@@ -78,11 +78,13 @@ export function LiveVisualBuilder({
       : 'https://invitations-website-rust.vercel.app'
 
   // Sync state if initialInvitation updates from server, but never overwrite active typing
+  const initialIdRef = useRef(initialInvitation?.id)
   useEffect(() => {
-    if (initialInvitation && !hasUnsavedChanges) {
+    if (initialInvitation?.id && initialInvitation.id !== initialIdRef.current) {
+      initialIdRef.current = initialInvitation.id
       setInvitation(initialInvitation)
     }
-  }, [initialInvitation, hasUnsavedChanges])
+  }, [initialInvitation])
 
   const [activeTab, setActiveTab] = useState<
     | 'couple'
@@ -139,15 +141,43 @@ export function LiveVisualBuilder({
     setHasUnsavedChanges(true)
   }
 
-  // Update couple sub-record
+  // Update couple sub-record with automatic synchronization of full names and invitation title
   const updateCoupleField = (field: string, value: any) => {
-    setInvitation((prev: any) => ({
-      ...prev,
-      couple: {
-        ...(prev.couple || {}),
+    setInvitation((prev: any) => {
+      const currentCouple = prev.couple || {}
+      const updatedCouple = {
+        ...currentCouple,
         [field]: value,
-      },
-    }))
+      }
+
+      // Automatically maintain clean groomFullName and brideFullName whenever first or last/family name changes
+      if (field === 'groomFirstName' || field === 'groomLastName') {
+        const first = (field === 'groomFirstName' ? value : (updatedCouple.groomFirstName || '')).trim()
+        const last = (field === 'groomLastName' ? value : (updatedCouple.groomLastName || '')).trim()
+        updatedCouple.groomFullName = [first, last].filter(Boolean).join(' ')
+      }
+      if (field === 'brideFirstName' || field === 'brideLastName') {
+        const first = (field === 'brideFirstName' ? value : (updatedCouple.brideFirstName || '')).trim()
+        const last = (field === 'brideLastName' ? value : (updatedCouple.brideLastName || '')).trim()
+        updatedCouple.brideFullName = [first, last].filter(Boolean).join(' ')
+      }
+
+      if (field === 'groomFullName') {
+        updatedCouple.groomFullName = value
+      }
+      if (field === 'brideFullName') {
+        updatedCouple.brideFullName = value
+      }
+
+      const gName = updatedCouple.groomFullName || [updatedCouple.groomFirstName, updatedCouple.groomLastName].filter(Boolean).join(' ') || 'العريس'
+      const bName = updatedCouple.brideFullName || [updatedCouple.brideFirstName, updatedCouple.brideLastName].filter(Boolean).join(' ') || 'العروس'
+
+      return {
+        ...prev,
+        title: `${gName} & ${bName}`,
+        couple: updatedCouple,
+      }
+    })
     setHasUnsavedChanges(true)
   }
 
@@ -303,9 +333,14 @@ export function LiveVisualBuilder({
         if (data.invitation) {
           setInvitation((prev: any) => ({
             ...prev,
-            id: data.invitation.id,
-            status: data.invitation.status || prev.status,
-            slug: data.invitation.slug || prev.slug,
+            ...data.invitation,
+            couple: {
+              ...(prev.couple || {}),
+              ...(data.invitation.couple || {}),
+            },
+            events: data.invitation.events || prev.events,
+            timeline: data.invitation.timeline || prev.timeline,
+            sections: data.invitation.sections || prev.sections,
           }))
         } else if (statusOverride) {
           updateInvitationField('status', statusOverride)
@@ -703,58 +738,196 @@ export function LiveVisualBuilder({
                   معلومات وبيانات العروسين وموعد الحفل
                 </h4>
 
-                {/* Groom's info first */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
-                      اسم العريس
-                    </label>
-                    <input
-                      type="text"
-                      value={invitation.couple?.groomFirstName || ''}
-                      onChange={(e) => updateCoupleField('groomFirstName', e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
-                    />
+                {/* Groom's info */}
+                <div className="p-4 bg-white rounded-lg border border-[#EAE1D3] space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-[#EAE1D3] pb-2">
+                    <span className="text-xs font-bold text-[#332A25]">
+                      بيانات العريس
+                    </span>
+                    <span className="text-[10px] text-[#C8A96B] font-semibold">
+                      تظهر في واجهة الدعوة والغلاف
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold mb-1 text-[#332A25]">
+                        اسم العريس الأول
+                      </label>
+                      <input
+                        type="text"
+                        value={invitation.couple?.groomFirstName || ''}
+                        onChange={(e) => updateCoupleField('groomFirstName', e.target.value)}
+                        placeholder="مثال: محمد"
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]/30"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold mb-1 text-[#332A25]">
+                        عائلة العريس (اللقب)
+                      </label>
+                      <input
+                        type="text"
+                        value={invitation.couple?.groomLastName || ''}
+                        onChange={(e) => updateCoupleField('groomLastName', e.target.value)}
+                        placeholder="مثال: الغامدي"
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]/30"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
-                      عائلة العريس
+                    <label className="block text-[11px] font-semibold mb-1 text-[#332A25]">
+                      الاسم الكامل المعروض للعريس في الدعوة
                     </label>
                     <input
                       type="text"
-                      value={invitation.couple?.groomLastName || ''}
-                      onChange={(e) => updateCoupleField('groomLastName', e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
+                      value={
+                        invitation.couple?.groomFullName ||
+                        [invitation.couple?.groomFirstName, invitation.couple?.groomLastName].filter(Boolean).join(' ') ||
+                        ''
+                      }
+                      onChange={(e) => updateCoupleField('groomFullName', e.target.value)}
+                      placeholder="الاسم الكامل كما سيظهر في كافة شاشات الدعوة"
+                      className="w-full px-3 py-2 text-xs rounded border border-[#C8A96B]/50 focus:border-[#C8A96B] bg-white font-medium"
                     />
                   </div>
                 </div>
 
-                {/* Bride's info second */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
-                      اسم العروس
-                    </label>
-                    <input
-                      type="text"
-                      value={invitation.couple?.brideFirstName || ''}
-                      onChange={(e) => updateCoupleField('brideFirstName', e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
-                    />
+                {/* Bride's info */}
+                <div className="p-4 bg-white rounded-lg border border-[#EAE1D3] space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-[#EAE1D3] pb-2">
+                    <span className="text-xs font-bold text-[#332A25]">
+                      بيانات العروس
+                    </span>
+                    <span className="text-[10px] text-[#C8A96B] font-semibold">
+                      تظهر في واجهة الدعوة والغلاف
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold mb-1 text-[#332A25]">
+                        اسم العروس الأول
+                      </label>
+                      <input
+                        type="text"
+                        value={invitation.couple?.brideFirstName || ''}
+                        onChange={(e) => updateCoupleField('brideFirstName', e.target.value)}
+                        placeholder="مثال: سارة"
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]/30"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold mb-1 text-[#332A25]">
+                        عائلة العروس (اللقب)
+                      </label>
+                      <input
+                        type="text"
+                        value={invitation.couple?.brideLastName || ''}
+                        onChange={(e) => updateCoupleField('brideLastName', e.target.value)}
+                        placeholder="مثال: العتيبي"
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]/30"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold mb-1 text-[#332A25]">
-                      عائلة العروس
+                    <label className="block text-[11px] font-semibold mb-1 text-[#332A25]">
+                      الاسم الكامل المعروض للعروس في الدعوة
                     </label>
                     <input
                       type="text"
-                      value={invitation.couple?.brideLastName || ''}
-                      onChange={(e) => updateCoupleField('brideLastName', e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B]"
+                      value={
+                        invitation.couple?.brideFullName ||
+                        [invitation.couple?.brideFirstName, invitation.couple?.brideLastName].filter(Boolean).join(' ') ||
+                        ''
+                      }
+                      onChange={(e) => updateCoupleField('brideFullName', e.target.value)}
+                      placeholder="الاسم الكامل كما سيظهر في كافة شاشات الدعوة"
+                      className="w-full px-3 py-2 text-xs rounded border border-[#C8A96B]/50 focus:border-[#C8A96B] bg-white font-medium"
                     />
                   </div>
+                </div>
+
+                {/* Family Names & Announcement Card */}
+                <div className="p-4 bg-white rounded-lg border-2 border-[#C8A96B]/40 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#C8A96B]" />
+                      <span className="text-xs font-bold text-[#332A25]">
+                        إظهار اسم العائلة وكلمة الأهل (دعوة العائلتين):
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(invitation.couple?.familyNamesEnabled)}
+                      onChange={(e) => updateCoupleField('familyNamesEnabled', e.target.checked)}
+                      className="w-4 h-4 text-[#C8A96B] cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-[#918579] leading-relaxed">
+                    تظهر صيغة دعوة الأهل والعائلتين بوضوح وأناقة في أعلى واجهة الدعوة وبدايتها وعند ترحيب الضيوف.
+                  </p>
+
+                  {Boolean(invitation.couple?.familyNamesEnabled) && (
+                    <div className="space-y-2 pt-2 border-t border-[#EAE1D3]">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] font-semibold text-[#332A25]">
+                          صيغة دعوة العائلتين المكتوبة:
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const gFamily = invitation.couple?.groomLastName?.trim() || invitation.couple?.groomFullName?.trim() || 'العريس'
+                            const bFamily = invitation.couple?.brideLastName?.trim() || invitation.couple?.brideFullName?.trim() || 'العروس'
+                            const autoMsg = `يتشرف آل ${gFamily} وآل ${bFamily} بدعوتكم لحضور حفل الزفاف المبارك`
+                            updateCoupleField('familyNamesContent', autoMsg)
+                          }}
+                          className="text-[10px] text-[#C8A96B] hover:underline font-semibold cursor-pointer"
+                        >
+                          توليد تلقائي من العائلتين 🪄
+                        </button>
+                      </div>
+
+                      <textarea
+                        rows={2}
+                        value={invitation.couple?.familyNamesContent || ''}
+                        onChange={(e) => updateCoupleField('familyNamesContent', e.target.value)}
+                        placeholder="يتشرف آل فلان وآل فلان بدعوتكم لحضور حفل الزفاف..."
+                        className="w-full px-3 py-2 text-xs rounded border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0] text-[#332A25]"
+                      />
+
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateCoupleField(
+                              'familyNamesContent',
+                              `يتشرف والد العريس ووالد العروس بدعوتكم لمشاركتهم فرحة العمر`
+                            )
+                          }
+                          className="px-2 py-1 text-[10px] bg-[#FAF7F0] hover:bg-[#EAE1D3] rounded border border-[#EAE1D3] text-[#7A6B5F]"
+                        >
+                          صيغة الوالدين
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateCoupleField(
+                              'familyNamesContent',
+                              `بقلوب تفيض بالحب والسرور، تتشرف عائلتا العروسين بدعوتكم لمشاركتنا أجمل ليالي العمر`
+                            )
+                          }
+                          className="px-2 py-1 text-[10px] bg-[#FAF7F0] hover:bg-[#EAE1D3] rounded border border-[#EAE1D3] text-[#7A6B5F]"
+                        >
+                          صيغة محبة العائلتين
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Monogram Box at start of invitation */}
@@ -803,8 +976,8 @@ export function LiveVisualBuilder({
                         <button
                           type="button"
                           onClick={() => {
-                            const gChar = invitation.couple?.groomFirstName?.trim()?.charAt(0) || 'M'
-                            const bChar = invitation.couple?.brideFirstName?.trim()?.charAt(0) || 'A'
+                            const gChar = invitation.couple?.groomFirstName?.trim()?.charAt(0) || invitation.couple?.groomFullName?.trim()?.charAt(0) || 'M'
+                            const bChar = invitation.couple?.brideFirstName?.trim()?.charAt(0) || invitation.couple?.brideFullName?.trim()?.charAt(0) || 'A'
                             const autoLetters = `${gChar} & ${bChar}`
                             updateInvitationField('coverMonogram', autoLetters)
                             updateCoupleField('monogram', autoLetters)

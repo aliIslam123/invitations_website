@@ -123,8 +123,22 @@ export function InvitationRenderer({
   const isRtl = invitation.direction === 'rtl' || invitation.language === 'ar'
 
   const couple = invitation.couple || {}
-  const brideName = couple.brideFullName || couple.brideFirstName || 'العروس'
-  const groomName = couple.groomFullName || couple.groomFirstName || 'العريس'
+  
+  // Resolve Groom Name with full reactive support for first name, last/family name, and full name
+  const groomFirst = (couple.groomFirstName || '').trim()
+  const groomLast = (couple.groomLastName || '').trim()
+  const groomFull = (couple.groomFullName || '').trim()
+  const groomName = (groomFirst || groomLast)
+    ? [groomFirst, groomLast].filter(Boolean).join(' ')
+    : (groomFull || 'العريس')
+
+  // Resolve Bride Name with full reactive support for first name, last/family name, and full name
+  const brideFirst = (couple.brideFirstName || '').trim()
+  const brideLast = (couple.brideLastName || '').trim()
+  const brideFull = (couple.brideFullName || '').trim()
+  const brideName = (brideFirst || brideLast)
+    ? [brideFirst, brideLast].filter(Boolean).join(' ')
+    : (brideFull || 'العروس')
   const weddingDate = couple.weddingDate || null
   const weddingTime = couple.weddingTime || null
 
@@ -213,6 +227,8 @@ export function InvitationRenderer({
             layout={couple.heroLayout || 'cinematic'}
             brideName={brideName}
             groomName={groomName}
+            familyNamesEnabled={Boolean(couple.familyNamesEnabled)}
+            familyNamesContent={couple.familyNamesContent}
             weddingDate={weddingDate}
             weddingTime={weddingTime}
             heroImage={couple.heroImage}

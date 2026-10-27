@@ -176,21 +176,33 @@ export async function PUT(
 
     // Upsert Couple info
     if (couple) {
+      const groomFirst = (couple.groomFirstName || '').trim()
+      const groomLast = (couple.groomLastName || '').trim()
+      const computedGroomFull = (groomFirst || groomLast)
+        ? [groomFirst, groomLast].filter(Boolean).join(' ')
+        : (couple.groomFullName || '')
+
+      const brideFirst = (couple.brideFirstName || '').trim()
+      const brideLast = (couple.brideLastName || '').trim()
+      const computedBrideFull = (brideFirst || brideLast)
+        ? [brideFirst, brideLast].filter(Boolean).join(' ')
+        : (couple.brideFullName || '')
+
       await prisma.coupleInformation.upsert({
         where: { invitationId: id },
         create: {
           invitationId: id,
-          brideFirstName: couple.brideFirstName || '',
-          brideLastName: couple.brideLastName || '',
-          brideFullName: couple.brideFullName || '',
+          brideFirstName: brideFirst,
+          brideLastName: brideLast,
+          brideFullName: computedBrideFull,
           brideFather: couple.brideFather || null,
           brideMother: couple.brideMother || null,
           brideBio: couple.brideBio || null,
           bridePhoto: couple.bridePhoto || null,
 
-          groomFirstName: couple.groomFirstName || '',
-          groomLastName: couple.groomLastName || '',
-          groomFullName: couple.groomFullName || '',
+          groomFirstName: groomFirst,
+          groomLastName: groomLast,
+          groomFullName: computedGroomFull,
           groomFather: couple.groomFather || null,
           groomMother: couple.groomMother || null,
           groomBio: couple.groomBio || null,
@@ -224,17 +236,17 @@ export async function PUT(
           postEventMessage: couple.postEventMessage || null,
         },
         update: {
-          brideFirstName: couple.brideFirstName || '',
-          brideLastName: couple.brideLastName || '',
-          brideFullName: couple.brideFullName || '',
+          brideFirstName: brideFirst,
+          brideLastName: brideLast,
+          brideFullName: computedBrideFull,
           brideFather: couple.brideFather || null,
           brideMother: couple.brideMother || null,
           brideBio: couple.brideBio || null,
           bridePhoto: couple.bridePhoto || null,
 
-          groomFirstName: couple.groomFirstName || '',
-          groomLastName: couple.groomLastName || '',
-          groomFullName: couple.groomFullName || '',
+          groomFirstName: groomFirst,
+          groomLastName: groomLast,
+          groomFullName: computedGroomFull,
           groomFather: couple.groomFather || null,
           groomMother: couple.groomMother || null,
           groomBio: couple.groomBio || null,
@@ -385,6 +397,10 @@ export async function PUT(
         revalidatePath(`/wedding/${fullUpdated.slug}`)
         revalidatePath(`/wedding/${fullUpdated.slug}`, 'page')
         revalidatePath(`/wedding/${fullUpdated.slug}`, 'layout')
+        revalidatePath(`/editor/${id}`)
+        revalidatePath(`/editor/${id}`, 'page')
+        revalidatePath(`/editor/${id}/preview`)
+        revalidatePath(`/editor/${id}/preview`, 'page')
         revalidatePath(`/dashboard/invitations/edit/${id}`, 'page')
       }
       if (slug && slug !== fullUpdated?.slug) {

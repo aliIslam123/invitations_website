@@ -11,6 +11,8 @@ interface HeroSectionProps {
   layout?: string
   brideName: string
   groomName: string
+  familyNamesEnabled?: boolean
+  familyNamesContent?: string | null
   weddingDate?: Date | string | null
   weddingTime?: string | null
   venueTeaser?: string | null
@@ -30,6 +32,8 @@ export function HeroSection({
   layout = 'cinematic',
   brideName,
   groomName,
+  familyNamesEnabled,
+  familyNamesContent,
   weddingDate,
   weddingTime,
   venueTeaser,
@@ -104,6 +108,16 @@ export function HeroSection({
             >
               {invitationText || (isRtl ? 'دعوة زفاف خاصة' : 'Wedding Celebration')}
             </motion.p>
+
+            {familyNamesEnabled && familyNamesContent && (
+              <motion.p
+                variants={itemVariants}
+                className="text-xs sm:text-sm font-medium mb-3 leading-relaxed"
+                style={{ color: theme.colors.text }}
+              >
+                {familyNamesContent}
+              </motion.p>
+            )}
 
             <motion.h1
               variants={itemVariants}
@@ -187,6 +201,16 @@ export function HeroSection({
           >
             {invitationText || (isRtl ? 'يسعدنا دعوتكم لمشاركتنا فرحتنا' : 'Save The Date')}
           </motion.p>
+
+          {familyNamesEnabled && familyNamesContent && (
+            <motion.p
+              variants={itemVariants}
+              className="text-xs sm:text-sm font-medium mb-3 leading-relaxed"
+              style={{ color: theme.colors.text }}
+            >
+              {familyNamesContent}
+            </motion.p>
+          )}
 
           <motion.h1
             variants={itemVariants}
@@ -281,6 +305,16 @@ export function HeroSection({
           >
             {invitationText || 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'}
           </motion.p>
+
+          {familyNamesEnabled && familyNamesContent && (
+            <motion.p
+              variants={itemVariants}
+              className="text-xs sm:text-sm font-medium mb-3 leading-relaxed"
+              style={{ color: theme.colors.text }}
+            >
+              {familyNamesContent}
+            </motion.p>
+          )}
 
           <motion.div variants={itemVariants} className="my-6">
             <h1
@@ -382,6 +416,15 @@ export function HeroSection({
         >
           {invitationText || (isRtl ? 'دعوة لحضور حفل الزفاف' : 'The Wedding Celebration of')}
         </motion.p>
+
+        {familyNamesEnabled && familyNamesContent && (
+          <motion.p
+            variants={itemVariants}
+            className="text-sm md:text-base font-medium text-white/95 max-w-xl mx-auto mb-4 leading-relaxed drop-shadow"
+          >
+            {familyNamesContent}
+          </motion.p>
+        )}
 
         {/* Bride & Groom Names — Visual Focal Point */}
         <motion.h1
