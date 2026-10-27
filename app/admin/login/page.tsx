@@ -1,8 +1,7 @@
 import React from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth'
-import { loginWithCredentialsAction } from '@/app/auth/actions'
+import { getSession, authenticateCredentials, createSession } from '@/lib/auth'
 import { Shield, Lock, User, ArrowLeft, Sparkles, CheckCircle2 } from 'lucide-react'
 
 export const metadata = {
@@ -21,6 +20,24 @@ export default async function AdminLoginPage({
   }
 
   const { error } = await searchParams
+
+  async function handleAdminLogin(formData: FormData) {
+    'use server'
+    const identifier = (formData.get('email') as string)?.trim() || ''
+    const password = (formData.get('password') as string) || ''
+
+    if (!identifier || !password) {
+      redirect('/admin/login?error=missing_fields')
+    }
+
+    const user = await authenticateCredentials(identifier, password)
+    if (!user || user.role !== 'ADMIN') {
+      redirect('/admin/login?error=invalid_credentials')
+    }
+
+    await createSession(user.id)
+    redirect('/admin')
+  }
 
   return (
     <div
@@ -90,9 +107,7 @@ export default async function AdminLoginPage({
           </div>
 
           {/* Form */}
-          <form action={loginWithCredentialsAction.bind(null, null)} className="space-y-4">
-            <input type="hidden" name="returnTo" value="/admin" />
-
+          <form action={handleAdminLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold mb-1 text-slate-300">
                 اسم المستخدم أو البريد الإلكتروني للمدير
