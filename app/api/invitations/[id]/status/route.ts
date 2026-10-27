@@ -13,6 +13,19 @@ export async function PATCH(
     }
 
     const { id } = await params
+    const existing = await prisma.weddingInvitation.findUnique({
+      where: { id },
+      select: { id: true, userId: true },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'الدعوة غير موجودة' }, { status: 404 })
+    }
+
+    if (existing.userId !== session.userId && session.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'غير مصرح لك بتعديل حالة هذه الدعوة' }, { status: 403 })
+    }
+
     const { status } = await req.json()
 
     if (!['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(status)) {

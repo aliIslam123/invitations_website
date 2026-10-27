@@ -29,6 +29,10 @@ export async function POST(
       return NextResponse.json({ error: 'الدعوة غير موجودة' }, { status: 404 })
     }
 
+    if (source.userId !== session.userId && session.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'غير مصرح لك بنسخ هذه الدعوة' }, { status: 403 })
+    }
+
     // Generate unique slug
     const newSlug = `${source.slug}-copy-${Date.now().toString().slice(-4)}`
 

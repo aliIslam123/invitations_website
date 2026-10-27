@@ -1,6 +1,8 @@
 import React from 'react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 import {
   Mail,
   CheckCircle,
@@ -8,13 +10,27 @@ import {
   Users,
   Eye,
   PlusCircle,
-  ArrowUpRight,
+  ArrowLeft,
   Sparkles,
   Calendar,
   ExternalLink,
+  Edit3,
+  Palette,
+  Heart,
 } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function DashboardOverviewPage() {
+  const session = await getSession()
+  if (!session) {
+    redirect('/auth/sign-in?returnTo=/dashboard')
+  }
+
+  const isAdmin = session.role === 'ADMIN'
+  const filterClause = isAdmin ? {} : { userId: session.userId }
+
   let totalInvitations = 0
   let publishedCount = 0
   let draftCount = 0
@@ -25,18 +41,22 @@ export default async function DashboardOverviewPage() {
 
   try {
     const results = await Promise.all([
-      prisma.weddingInvitation.count(),
-      prisma.weddingInvitation.count({ where: { status: 'PUBLISHED' } }),
-      prisma.weddingInvitation.count({ where: { status: 'DRAFT' } }),
-      prisma.rSVPResponse.count(),
+      prisma.weddingInvitation.count({ where: filterClause }),
+      prisma.weddingInvitation.count({ where: { ...filterClause, status: 'PUBLISHED' } }),
+      prisma.weddingInvitation.count({ where: { ...filterClause, status: 'DRAFT' } }),
+      prisma.rSVPResponse.count({
+        where: isAdmin ? {} : { invitation: { userId: session.userId } },
+      }),
       prisma.rSVPResponse.findMany({
+        where: isAdmin ? {} : { invitation: { userId: session.userId } },
         select: {
           attendance: true,
           guestCount: true,
         },
       }),
       prisma.weddingInvitation.findMany({
-        take: 5,
+        where: filterClause,
+        take: 6,
         orderBy: { updatedAt: 'desc' },
         include: {
           couple: true,
@@ -69,7 +89,7 @@ export default async function DashboardOverviewPage() {
             تفعيل قاعدة البيانات لأول مرة
           </h3>
           <p className="text-xs text-[#918579] leading-relaxed">
-            قاعدة البيانات بحاجة إلى تفعيل الجداول وزرع الحساب الإداري والدعوة النموذجية. اضغط على الزر التالي للتفعيل الفوري:
+            قاعدة البيانات بحاجة إلى تفعيل الجداول وزرع الحساب الإداري والدعوة النموذجية.
           </p>
         </div>
         <div>
@@ -91,7 +111,7 @@ export default async function DashboardOverviewPage() {
 
   const stats = [
     {
-      title: 'إجمالي الدعوات',
+      title: 'إجمالي دعواتكم',
       value: totalInvitations,
       icon: Mail,
       sub: `${publishedCount} منشورة • ${draftCount} مسودة`,
@@ -103,183 +123,202 @@ export default async function DashboardOverviewPage() {
       sub: 'متاحة للضيوف بروابط عامة',
     },
     {
-      title: 'إجمالي ردود الحضور (RSVP)',
+      title: 'إجمالي ردود الحضور',
       value: totalRsvps,
       icon: Users,
-      sub: `مجموع الردود المسجلة`,
+      sub: `مجموع استجابات الضيوف المسجلة`,
     },
     {
       title: 'الضيوف المؤكد حضورهم',
       value: confirmedGuests,
       icon: Sparkles,
-      sub: 'عدد الأفراد المسجلين',
+      sub: 'إجمالي الأفراد المرحب بهم',
     },
   ]
 
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
+      ? process.env.NEXT_PUBLIC_SITE_URL
+      : 'https://invitations-website-rust.vercel.app'
+
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
-      {/* Top Banner / Welcome */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-white rounded-sm border border-[#EAE1D3] shadow-xs">
-        <div>
-          <h2 className="text-2xl font-serif-luxury font-bold text-[#332A25]">
-            مرحباً بك في استوديو دعوات الزفاف
+    <div className="space-y-8 max-w-6xl mx-auto" dir="rtl">
+      {/* Welcome Banner */}
+      <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#EAE1D3] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FAF7F0] text-[#A68648] border border-[#C8A96B]/30">
+              {isAdmin ? 'حساب مدير المنصة' : 'مساحة العروسين'}
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-[#332A25]">
+            أهلاً بك، {session.name || session.email}
           </h2>
-          <p className="text-xs text-[#918579] mt-1">
-            إدارة كافة دعوات الزفاف، تخصيص المظهر والسمات، وتتبع ردود الضيوف في مكان واحد.
+          <p className="text-xs sm:text-sm text-[#7A6B5F]">
+            هنا يمكنك متابعة دعواتك وتعديل تفاصيلها ولحظات الفرح واستقبال ردود أحبابكم.
           </p>
         </div>
 
-        <Link
-          href="/dashboard/invitations/create"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-sm shrink-0"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>إنشاء دعوة جديدة</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/dashboard/invitations/new"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-sm text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-xs"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>إنشاء دعوة جديدة</span>
+          </Link>
+          <Link
+            href="/templates"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-sm text-xs font-medium border border-[#EAE1D3] text-[#332A25] hover:bg-[#FAF7F0] transition-colors"
+          >
+            <Palette className="w-4 h-4 text-[#C8A96B]" />
+            <span>استكشاف القوالب</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Real Statistics Grid */}
+      {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, idx) => {
+        {stats.map((stat, i) => {
           const Icon = stat.icon
           return (
             <div
-              key={idx}
-              className="p-5 bg-white rounded-sm border border-[#EAE1D3] shadow-xs flex flex-col justify-between"
+              key={i}
+              className="bg-white p-5 rounded-lg border border-[#EAE1D3] shadow-xs flex items-center justify-between hover:border-[#C8A96B] transition-colors"
             >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-[#918579]">{stat.title}</span>
-                <div className="w-8 h-8 rounded-full bg-[#FAF7F0] border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B]">
-                  <Icon className="w-4 h-4" />
-                </div>
-              </div>
-              <div>
-                <span className="text-3xl font-serif-luxury font-bold text-[#332A25]">
+              <div className="space-y-1">
+                <span className="text-xs text-[#918579] font-medium block">
+                  {stat.title}
+                </span>
+                <span className="text-2xl font-serif-luxury font-bold text-[#332A25] block">
                   {stat.value}
                 </span>
-                <p className="text-[11px] text-[#918579] mt-1">{stat.sub}</p>
+                <span className="text-[11px] text-[#A68648] block">
+                  {stat.sub}
+                </span>
+              </div>
+              <div className="w-11 h-11 rounded-full bg-[#FAF7F0] border border-[#EAE1D3] flex items-center justify-center text-[#C8A96B] shrink-0">
+                <Icon className="w-5 h-5" />
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Recent Invitations Section */}
-      <div className="bg-white rounded-sm border border-[#EAE1D3] shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-[#EAE1D3] flex items-center justify-between">
+      {/* Recent Invitations or Empty State */}
+      <div className="bg-white rounded-lg border border-[#EAE1D3] shadow-xs overflow-hidden">
+        <div className="p-6 border-b border-[#EAE1D3] flex items-center justify-between">
           <div>
             <h3 className="font-serif-luxury font-bold text-lg text-[#332A25]">
-              أحدث دعوات الزفاف
+              دعوات الزفاف الخاصة بك
             </h3>
-            <p className="text-xs text-[#918579]">
-              قائمة بالدعوات النشطة ومسودات العمل الحالية
+            <p className="text-xs text-[#918579] mt-0.5">
+              إدارة الروابط، التعديل المباشر، ومتابعة الردود
             </p>
           </div>
 
-          <Link
-            href="/dashboard/invitations"
-            className="text-xs font-semibold text-[#C8A96B] hover:underline flex items-center gap-1"
-          >
-            <span>عرض كافة الدعوات</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
+          {recentInvitations.length > 0 && (
+            <Link
+              href="/dashboard/invitations"
+              className="text-xs font-semibold text-[#C8A96B] hover:text-[#A68648] inline-flex items-center gap-1"
+            >
+              <span>عرض كل الدعوات</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </Link>
+          )}
         </div>
 
         {recentInvitations.length === 0 ? (
-          <div className="p-12 text-center">
-            <Mail className="w-12 h-12 mx-auto text-[#C8A96B] opacity-40 mb-3" />
-            <h4 className="text-base font-bold text-[#332A25] mb-1">لا توجد دعوات بعد</h4>
-            <p className="text-xs text-[#918579] mb-4">
-              ابدأ بإنشاء أول دعوة زفاف فاخرة بضغطة زر واحدة.
-            </p>
-            <Link
-              href="/dashboard/invitations/create"
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#C8A96B] rounded-sm hover:bg-[#A68648]"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>إنشاء دعوة</span>
-            </Link>
+          <div className="text-center py-16 px-6 space-y-4">
+            <div className="w-16 h-16 rounded-full bg-[#FAF7F0] border border-[#C8A96B] mx-auto flex items-center justify-center text-[#C8A96B]">
+              <Mail className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-serif-luxury font-bold text-lg text-[#332A25]">
+                لم تقم بإنشاء أي دعوة زفاف بعد
+              </h4>
+              <p className="text-xs text-[#918579] max-w-sm mx-auto">
+                اختر قالباً مميزاً من مكتبة التصاميم وابدأ بتخصيص بطاقة زفافكم الملكية الآن.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Link
+                href="/dashboard/invitations/new"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-sm text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-xs"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>إنشاء دعوتكم الأولى الآن</span>
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-[#FAF7F0] border-b border-[#EAE1D3] text-[#918579] uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="py-3 px-5">اسم الدعوة والعروسين</th>
-                  <th className="py-3 px-5">الرابط المخصص (Slug)</th>
-                  <th className="py-3 px-5">الحالة</th>
-                  <th className="py-3 px-5">السمة</th>
-                  <th className="py-3 px-5">ردود الحضور</th>
-                  <th className="py-3 px-5 text-center">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EAE1D3]">
-                {recentInvitations.map((inv) => {
-                  const couple = inv.couple
-                  const bride = couple?.brideFullName || couple?.brideFirstName || ''
-                  const groom = couple?.groomFullName || couple?.groomFirstName || ''
+          <div className="divide-y divide-[#EAE1D3]">
+            {recentInvitations.map((inv) => {
+              const groomName = inv.couple?.groomFullName || inv.couple?.groomFirstName || 'العريس'
+              const brideName = inv.couple?.brideFullName || inv.couple?.brideFirstName || 'العروس'
+              const isPublished = inv.status === 'PUBLISHED'
+              const publicUrl = `${siteUrl}/wedding/${inv.slug}`
 
-                  return (
-                    <tr key={inv.id} className="hover:bg-[#FAF7F0]/40 transition-colors">
-                      <td className="py-4 px-5">
-                        <div className="font-semibold text-sm text-[#332A25]">
-                          {bride && groom ? `${bride} & ${groom}` : inv.title || 'دعوة بدون اسم'}
-                        </div>
-                        <div className="text-[11px] text-[#918579] mt-0.5">{inv.title}</div>
-                      </td>
-                      <td className="py-4 px-5 font-mono text-[11px] text-[#332A25]">
-                        /wedding/{inv.slug}
-                      </td>
-                      <td className="py-4 px-5">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            inv.status === 'PUBLISHED'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : inv.status === 'DRAFT'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}
-                        >
-                          {inv.status === 'PUBLISHED'
-                            ? 'منشورة'
-                            : inv.status === 'DRAFT'
-                            ? 'مسودة'
-                            : 'مؤرشفة'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-5 text-[11px] text-[#918579]">
-                        {inv.themeId}
-                      </td>
-                      <td className="py-4 px-5 font-semibold text-[#332A25]">
-                        {inv._count.rsvpResponses} رد
-                      </td>
-                      <td className="py-4 px-5 text-center">
-                        <div className="inline-flex items-center gap-2">
-                          <Link
-                            href={`/dashboard/invitations/edit/${inv.id}`}
-                            className="px-2.5 py-1 rounded text-xs font-semibold bg-[#FAF7F0] border border-[#EAE1D3] text-[#332A25] hover:border-[#C8A96B] transition-colors"
-                          >
-                            تعديل مباشر
-                          </Link>
+              return (
+                <div
+                  key={inv.id}
+                  className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#FAF7F0]/40 transition-colors"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-serif-luxury font-bold text-base text-[#332A25]">
+                        {groomName} & {brideName}
+                      </h4>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isPublished
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
+                        {isPublished ? 'منشورة للعامة' : 'مسودة قيد التجهيز'}
+                      </span>
+                    </div>
 
-                          {inv.status === 'PUBLISHED' && (
-                            <a
-                              href={`/wedding/${inv.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1 text-[#C8A96B] hover:text-[#A68648]"
-                              title="معاينة الصفحة العامة"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-[#918579]">
+                      <span className="font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-[#EAE1D3]">
+                        /{inv.slug}
+                      </span>
+                      <span>القالب: {inv.themeId || 'الشمبانيا الملكي'}</span>
+                      <span>•</span>
+                      <span>{inv._count?.rsvpResponses || 0} رد حضور</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <Link
+                      href={`/editor/${inv.id}`}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-sm text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>المحرر المباشر</span>
+                    </Link>
+
+                    <Link
+                      href={`/dashboard/invitations/${inv.id}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-sm text-xs font-medium border border-[#EAE1D3] text-[#332A25] bg-white hover:bg-[#FAF7F0] transition-colors"
+                    >
+                      <span>إدارة الدعوة</span>
+                    </Link>
+
+                    <a
+                      href={publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-sm border border-[#EAE1D3] text-[#7A6B5F] hover:text-[#C8A96B] hover:bg-white transition-colors"
+                      title="معاينة الرابط العام"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

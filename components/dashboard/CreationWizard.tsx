@@ -22,7 +22,7 @@ import { THEMES, getAllThemes } from '@/lib/themes'
 import { ANIMATION_PRESETS } from '@/lib/animations'
 import { slugify } from '@/lib/utils'
 
-export function CreationWizard() {
+export function CreationWizard({ initialThemeId }: { initialThemeId?: string } = {}) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -35,7 +35,7 @@ export function CreationWizard() {
     status: 'PUBLISHED',
     language: 'ar',
     direction: 'rtl',
-    themeId: 'royal-champagne',
+    themeId: initialThemeId || 'royal-champagne',
     animationPreset: 'elegant',
 
     // Cover
@@ -187,7 +187,7 @@ export function CreationWizard() {
       }
 
       // Redirect to visual builder
-      router.push(`/dashboard/invitations/edit/${data.id}`)
+      router.push(`/editor/${data.id}`)
     } catch (err: any) {
       setErrorMessage(err.message || 'حدث خطأ أثناء الحفظ.')
       setIsSubmitting(false)

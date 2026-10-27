@@ -9,6 +9,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const session = await getSession()
+
     const invitation = await prisma.weddingInvitation.findUnique({
       where: { id },
       include: {
@@ -23,6 +25,18 @@ export async function GET(
 
     if (!invitation) {
       return NextResponse.json({ error: 'الدعوة غير موجودة' }, { status: 404 })
+    }
+
+    // Enforce data isolation: Drafts and RSVP responses only visible to owner or admin
+    const isOwner = session && (session.userId === invitation.userId || session.role === 'ADMIN')
+    if (invitation.status !== 'PUBLISHED' && !isOwner) {
+      return NextResponse.json({ error: 'غير مصرح لك بالوصول لهذه المسودة' }, { status: 403 })
+    }
+
+    // Strip private RSVPs for non-owners
+    if (!isOwner) {
+      const sanitized = { ...invitation, rsvpResponses: [] }
+      return NextResponse.json(sanitized)
     }
 
     return NextResponse.json(invitation)
@@ -42,6 +56,19 @@ export async function DELETE(
     }
 
     const { id } = await params
+    const existing = await prisma.weddingInvitation.findUnique({
+      where: { id },
+      select: { id: true, userId: true },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'الدعوة غير موجودة' }, { status: 404 })
+    }
+
+    if (existing.userId !== session.userId && session.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'غير مصرح لك بحذف هذه الدعوة' }, { status: 403 })
+    }
+
     await prisma.weddingInvitation.delete({
       where: { id },
     })
@@ -63,6 +90,19 @@ export async function PUT(
     }
 
     const { id } = await params
+    const existing = await prisma.weddingInvitation.findUnique({
+      where: { id },
+      select: { id: true, userId: true, slug: true },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'الدعوة غير موجودة' }, { status: 404 })
+    }
+
+    if (existing.userId !== session.userId && session.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'غير مصرح لك بتعديل هذه الدعوة' }, { status: 403 })
+    }
+
     const body = await req.json()
 
     const {

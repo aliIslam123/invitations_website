@@ -2,6 +2,38 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const status = searchParams.get('status')
+
+    const where: any = session.role === 'ADMIN' ? {} : { userId: session.userId }
+    if (status) {
+      where.status = status
+    }
+
+    const invitations = await prisma.weddingInvitation.findMany({
+      where,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        couple: true,
+        _count: {
+          select: { rsvpResponses: true, events: true },
+        },
+      },
+    })
+
+    return NextResponse.json(invitations)
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession()
