@@ -357,7 +357,13 @@ export function AdminDashboardClient({
           <div className="space-y-1">
             <span className="text-xs text-slate-500 font-medium block">ردود الحضور (RSVP)</span>
             <span className="text-2xl font-bold text-slate-900 block font-mono">{totalRsvps}</span>
-            <span className="text-[11px] text-slate-400 block">إجمالي ردود الضيوف</span>
+            <Link
+              href="/dashboard/rsvp"
+              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1 mt-1 transition-colors"
+            >
+              <span>عرض سجل الحضور (Excel) ↗</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
           </div>
           <div className="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <CheckCircle2 className="w-5 h-5" />
@@ -674,7 +680,14 @@ export function AdminDashboardClient({
                                     <span>•</span>
                                     <span>القالب: {inv.themeId || 'الشمبانيا الملكي'}</span>
                                     <span>•</span>
-                                    <span>{inv._count?.rsvpResponses || 0} رد حضور</span>
+                                    <Link
+                                      href={`/dashboard/rsvp?invitationId=${inv.id}`}
+                                      className="text-emerald-700 hover:text-emerald-800 font-bold hover:underline inline-flex items-center gap-1 font-sans"
+                                      title="عرض سجل ردود الحضور لهذه الدعوة وتصديرها"
+                                    >
+                                      <Users className="w-3 h-3" />
+                                      <span>{inv._count?.rsvpResponses || 0} رد حضور ↗</span>
+                                    </Link>
                                   </div>
                                 </div>
 
@@ -913,6 +926,15 @@ export function AdminDashboardClient({
                           {/* Other actions (Edit / Delete) */}
                           <td className="py-3.5 px-4 text-center">
                             <div className="inline-flex items-center gap-1.5">
+                              <Link
+                                href={`/dashboard/rsvp?invitationId=${inv.id}`}
+                                className="px-2.5 py-1.5 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                                title="عرض سجل ردود الحضور لهذه الدعوة وتصدير إكسل"
+                              >
+                                <Users className="w-3 h-3 text-emerald-600" />
+                                <span>الردود ({inv._count?.rsvpResponses || 0})</span>
+                              </Link>
+
                               <Link
                                 href={`/editor/${inv.id}`}
                                 className="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-semibold flex items-center gap-1 transition-colors"

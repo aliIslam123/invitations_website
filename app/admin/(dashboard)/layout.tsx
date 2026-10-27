@@ -12,6 +12,7 @@ import {
   Sparkles,
   ArrowRight,
   Home,
+  CheckCircle2,
 } from 'lucide-react'
 
 export default async function AdminLayout({
@@ -57,6 +58,14 @@ export default async function AdminLayout({
             >
               <Users className="w-4 h-4 text-[#C8A96B]" />
               <span>إدارة العملاء والدعوات</span>
+            </Link>
+
+            <Link
+              href="/dashboard/rsvp"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors"
+            >
+              <CheckCircle2 className="w-4 h-4 text-[#C8A96B]" />
+              <span>سجل ردود الحضور (RSVP)</span>
             </Link>
 
             <Link
