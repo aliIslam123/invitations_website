@@ -15,7 +15,7 @@ export async function PATCH(
     const { id } = await params
     const existing = await prisma.weddingInvitation.findUnique({
       where: { id },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, status: true },
     })
 
     if (!existing) {
@@ -24,6 +24,13 @@ export async function PATCH(
 
     if (existing.userId !== session.userId && session.role !== 'ADMIN') {
       return NextResponse.json({ error: 'غير مصرح لك بتعديل حالة هذه الدعوة' }, { status: 403 })
+    }
+
+    if (existing.status === 'SUSPENDED' && session.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'تم إيقاف هذه الدعوة من قِبل إدارة المنصة. يرجى التواصل مع الإدارة لإعادة تفعيلها.' },
+        { status: 403 }
+      )
     }
 
     const { status } = await req.json()

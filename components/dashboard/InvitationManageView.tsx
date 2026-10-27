@@ -116,21 +116,29 @@ export function InvitationManageView({
         <div className="flex items-center gap-3">
           <button
             onClick={toggleStatus}
-            disabled={isUpdatingStatus}
+            disabled={isUpdatingStatus || status === 'SUSPENDED'}
             className={`px-4 py-2 rounded-sm text-xs font-semibold transition-all flex items-center gap-2 ${
-              status === 'PUBLISHED'
+              status === 'SUSPENDED'
+                ? 'bg-red-50 text-red-700 border border-red-300 opacity-90 cursor-not-allowed'
+                : status === 'PUBLISHED'
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
                 : 'bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100'
             }`}
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                status === 'PUBLISHED' ? 'bg-emerald-500' : 'bg-amber-500'
+                status === 'SUSPENDED'
+                  ? 'bg-red-600 animate-pulse'
+                  : status === 'PUBLISHED'
+                  ? 'bg-emerald-500'
+                  : 'bg-amber-500'
               }`}
             />
             <span>
               {isUpdatingStatus
                 ? 'جاري التحديث...'
+                : status === 'SUSPENDED'
+                ? 'الحالة: ⛔ موقوفة من الإدارة'
                 : status === 'PUBLISHED'
                 ? 'الحالة: منشورة للعامة'
                 : 'الحالة: مسودة (غير منشورة)'}

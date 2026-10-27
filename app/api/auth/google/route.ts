@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { prisma } from '@/lib/db'
-import { createSession } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -11,23 +9,9 @@ export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
 
-  // If Google OAuth credentials are not set in environment variables,
-  // authenticate the client seamlessly with a Google profile so they can test and create invitations immediately
+  // If Google OAuth credentials are not configured, redirect back to sign-in with clear guidance
   if (!clientId || clientId === 'your-google-client-id' || !clientSecret) {
-    const googleEmail = 'google.client@gmail.com'
-    let googleUser = await prisma.user.findUnique({ where: { email: googleEmail } })
-    if (!googleUser) {
-      googleUser = await prisma.user.create({
-        data: {
-          name: 'عميل جوجل • Google User',
-          email: googleEmail,
-          image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
-          role: 'USER',
-        },
-      })
-    }
-    await createSession(googleUser.id)
-    const targetUrl = new URL(returnTo, req.url)
+    const targetUrl = new URL(`/auth/sign-in?error=google_not_configured&returnTo=${encodeURIComponent(returnTo)}`, req.url)
     return NextResponse.redirect(targetUrl)
   }
 

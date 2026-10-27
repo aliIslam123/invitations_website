@@ -314,17 +314,25 @@ export function InvitationsClientList({
                         <button
                           type="button"
                           onClick={() => handleToggleStatus(inv.id, inv.status)}
-                          disabled={isProcessing}
-                          title="اضغط لتغيير الحالة بين مسودة ومنشورة"
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-transform hover:scale-105 ${
-                            inv.status === 'PUBLISHED'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          disabled={isProcessing || inv.status === 'SUSPENDED'}
+                          title={
+                            inv.status === 'SUSPENDED'
+                              ? 'تم إيقاف هذه الدعوة من قِبل إدارة المنصة'
+                              : 'اضغط لتغيير الحالة بين مسودة ومنشورة'
+                          }
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-transform ${
+                            inv.status === 'SUSPENDED'
+                              ? 'bg-red-50 text-red-700 border border-red-300 cursor-not-allowed'
+                              : inv.status === 'PUBLISHED'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-pointer hover:scale-105'
                               : inv.status === 'DRAFT'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200 cursor-pointer hover:scale-105'
                               : 'bg-gray-100 text-gray-600'
                           }`}
                         >
-                          {inv.status === 'PUBLISHED'
+                          {inv.status === 'SUSPENDED'
+                            ? '⛔ موقوفة من الإدارة'
+                            : inv.status === 'PUBLISHED'
                             ? '● منشورة'
                             : inv.status === 'DRAFT'
                             ? '○ مسودة'

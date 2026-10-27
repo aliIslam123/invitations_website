@@ -2,8 +2,19 @@
 
 import React, { useState, useTransition, use } from 'react'
 import Link from 'next/link'
-import { Sparkles, Shield, Heart, ArrowLeft, Mail, Lock, User as UserIcon, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { loginWithCredentialsAction, registerWithCredentialsAction, demoCustomerLoginAction } from '../actions'
+import {
+  Sparkles,
+  Shield,
+  Heart,
+  ArrowLeft,
+  Mail,
+  Lock,
+  User as UserIcon,
+  AlertCircle,
+  Eye,
+  CheckCircle2,
+} from 'lucide-react'
+import { loginWithCredentialsAction, registerWithCredentialsAction } from '../actions'
 
 interface SignInPageProps {
   searchParams: Promise<{
@@ -29,9 +40,10 @@ export default function SignInPage(props: SignInPageProps) {
     formData.set('returnTo', returnTo)
 
     startTransition(async () => {
-      const res = activeTab === 'signin'
-        ? await loginWithCredentialsAction(null, formData)
-        : await registerWithCredentialsAction(null, formData)
+      const res =
+        activeTab === 'signin'
+          ? await loginWithCredentialsAction(null, formData)
+          : await registerWithCredentialsAction(null, formData)
 
       if (res?.error) {
         setFormError(res.error)
@@ -39,34 +51,40 @@ export default function SignInPage(props: SignInPageProps) {
     })
   }
 
-  const handleDemoLogin = () => {
-    setFormError(null)
-    startTransition(async () => {
-      await demoCustomerLoginAction(returnTo)
-    })
-  }
-
   return (
     <div dir="rtl" className="min-h-screen flex flex-col justify-between bg-[#FAF7F0] text-[#332A25]">
       {/* Top Header */}
-      <header className="py-6 px-6 md:px-12 flex items-center justify-between border-b border-[#EAE1D3] bg-white/70 backdrop-blur-md">
+      <header className="py-5 px-6 md:px-12 flex items-center justify-between border-b border-[#EAE1D3] bg-white/70 backdrop-blur-md">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full bg-[#FAF7F0] border border-[#C8A96B] flex items-center justify-center text-[#C8A96B] shadow-xs">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
             <span className="font-serif-luxury font-bold text-lg text-[#332A25]">فرحة العمر</span>
-            <span className="text-[9px] uppercase tracking-wider text-[#918579] block">Luxury Wedding Invitations</span>
+            <span className="text-[9px] uppercase tracking-wider text-[#918579] block">
+              Luxury Wedding Invitations
+            </span>
           </div>
         </Link>
 
-        <Link
-          href="/templates"
-          className="text-xs text-[#73675C] hover:text-[#C8A96B] flex items-center gap-1 font-medium transition-colors"
-        >
-          <span>استكشاف التصميمات</span>
-          <ArrowLeft className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/templates"
+            className="text-xs text-[#73675C] hover:text-[#C8A96B] font-medium transition-colors hidden sm:flex items-center gap-1"
+          >
+            <span>استكشاف القوالب</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </Link>
+          <a
+            href="/wedding/mohamed-and-asmaa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-[#A68648] hover:text-[#8c6f37] font-bold bg-[#C8A96B]/10 hover:bg-[#C8A96B]/20 border border-[#C8A96B]/30 px-3 py-1.5 rounded-full flex items-center gap-1 transition-all"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>معاينة دعوة حية</span>
+          </a>
+        </div>
       </header>
 
       {/* Main Container */}
@@ -78,35 +96,37 @@ export default function SignInPage(props: SignInPageProps) {
               <Heart className="w-5 h-5 fill-current text-[#C8A96B]" />
             </div>
             <h1 className="text-2xl font-serif-luxury font-bold text-[#332A25]">
-              {activeTab === 'signin' ? 'تسجيل الدخول لمنصتك' : 'إنشاء حساب جديد مجاناً'}
+              {activeTab === 'signin' ? 'تسجيل الدخول إلى حسابك' : 'إنشاء حساب جديد مجاناً'}
             </h1>
             <p className="text-xs text-[#918579] leading-relaxed max-w-xs mx-auto">
-              أنشئ وخصص بطاقات زفافك الرقمية الفاخرة وشاركها برابط مميز مع أحبائك
+              {activeTab === 'signin'
+                ? 'أهلاً بك مجدداً! سجّل دخولك لإدارة وتعديل ومشاركة دعواتك.'
+                : 'أنشئ حسابك بخطوة واحدة وابدأ فوراً في تصميم وتخصيص دعوة زفافك.'}
             </p>
           </div>
 
           {/* Error Notice */}
           {(errorParam || formError) && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <div>
+            <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+              <div className="leading-relaxed">
                 {formError ||
                   (errorParam === 'google_not_configured'
-                    ? 'لم يتم تهيئة مفاتيح Google OAuth بعد في البيئة. يمكنك الدخول فوراً بالبريد أو الضغط على الدخول التجريبي أدناه.'
+                    ? 'تسجيل الدخول بحساب Google يتطلب إعداد مفاتيح Google API في بيئة العمل. يمكنك إنشاء حسابك فوراً أو الدخول بالبريد الإلكتروني وكلمة المرور أدناه.'
                     : errorParam === 'state_mismatch'
                     ? 'انتهت صلاحية جلسة التحقق، يرجى المحاولة مرة أخرى.'
-                    : 'حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة ثانية.')}
+                    : 'حدث خطأ أثناء المصادقة، يرجى المحاولة مرة أخرى أو استخدام البريد الإلكتروني.')}
               </div>
             </div>
           )}
 
           {/* Primary Action: Google OAuth Sign-in */}
-          <div className="space-y-3">
+          <div>
             <a
               href={`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`}
               className="w-full py-3 px-4 border border-[#EAE1D3] hover:border-[#C8A96B] bg-white hover:bg-[#FAF7F0] rounded-xl text-xs font-bold text-[#332A25] flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer group"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -126,48 +146,53 @@ export default function SignInPage(props: SignInPageProps) {
               </svg>
               <span>المتابعة باستخدام حساب Google</span>
             </a>
-
-            {/* Quick Demo Login Option */}
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={isPending}
-              className="w-full py-2.5 px-3 bg-[#C8A96B]/15 hover:bg-[#C8A96B]/25 text-[#A68648] border border-[#C8A96B]/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{isPending ? 'جاري تسجيل الدخول...' : 'تسجيل دخول تجريبي فوري (1-Click Demo)'}</span>
-            </button>
           </div>
 
           <div className="relative flex items-center justify-center">
             <div className="border-t border-[#EAE1D3] w-full" />
-            <span className="bg-white px-3 text-[11px] text-[#918579] shrink-0 font-medium">أو عبر البريد الإلكتروني</span>
+            <span className="bg-white px-3 text-[11px] text-[#918579] shrink-0 font-medium">
+              أو بالبريد وكلمة المرور
+            </span>
           </div>
 
           {/* Tab selector */}
-          <div className="grid grid-cols-2 p-1 bg-[#FAF7F0] rounded-lg border border-[#EAE1D3] text-xs font-semibold">
+          <div className="grid grid-cols-2 p-1 bg-[#FAF7F0] rounded-xl border border-[#EAE1D3] text-xs font-semibold">
             <button
               type="button"
-              onClick={() => { setActiveTab('signin'); setFormError(null) }}
-              className={`py-1.5 rounded transition-all cursor-pointer ${activeTab === 'signin' ? 'bg-white shadow-xs text-[#332A25]' : 'text-[#73675C]'}`}
+              onClick={() => {
+                setActiveTab('signin')
+                setFormError(null)
+              }}
+              className={`py-2 rounded-lg transition-all cursor-pointer ${
+                activeTab === 'signin'
+                  ? 'bg-white shadow-xs text-[#332A25] font-bold'
+                  : 'text-[#73675C] hover:text-[#332A25]'
+              }`}
             >
               تسجيل الدخول
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('register'); setFormError(null) }}
-              className={`py-1.5 rounded transition-all cursor-pointer ${activeTab === 'register' ? 'bg-white shadow-xs text-[#332A25]' : 'text-[#73675C]'}`}
+              onClick={() => {
+                setActiveTab('register')
+                setFormError(null)
+              }}
+              className={`py-2 rounded-lg transition-all cursor-pointer ${
+                activeTab === 'register'
+                  ? 'bg-white shadow-xs text-[#332A25] font-bold'
+                  : 'text-[#73675C] hover:text-[#332A25]'
+              }`}
             >
-              حساب جديد
+              إنشاء حساب جديد
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleCredentialsSubmit} className="space-y-3.5">
+          <form onSubmit={handleCredentialsSubmit} className="space-y-4">
             {activeTab === 'register' && (
               <div>
-                <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
-                  الاسم الكريم
+                <label className="block text-[11px] font-semibold text-[#332A25] mb-1.5">
+                  الاسم الكامل
                 </label>
                 <div className="relative">
                   <UserIcon className="w-4 h-4 text-[#918579] absolute right-3 top-3 pointer-events-none" />
@@ -176,14 +201,14 @@ export default function SignInPage(props: SignInPageProps) {
                     type="text"
                     required
                     placeholder="مثال: محمد أحمد"
-                    className="w-full pr-9 pl-3 py-2 text-xs rounded-lg border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]/40"
+                    className="w-full pr-9 pl-3 py-2.5 text-xs rounded-xl border border-[#EAE1D3] focus:border-[#C8A96B] focus:outline-none bg-[#FAF7F0]/40 transition-colors"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
+              <label className="block text-[11px] font-semibold text-[#332A25] mb-1.5">
                 البريد الإلكتروني
               </label>
               <div className="relative">
@@ -193,14 +218,14 @@ export default function SignInPage(props: SignInPageProps) {
                   type="email"
                   required
                   placeholder="name@example.com"
-                  className="w-full pr-9 pl-3 py-2 text-xs rounded-lg border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]/40 font-mono"
+                  className="w-full pr-9 pl-3 py-2.5 text-xs rounded-xl border border-[#EAE1D3] focus:border-[#C8A96B] focus:outline-none bg-[#FAF7F0]/40 font-mono transition-colors"
                   dir="ltr"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#332A25] mb-1">
+              <label className="block text-[11px] font-semibold text-[#332A25] mb-1.5">
                 كلمة المرور
               </label>
               <div className="relative">
@@ -210,29 +235,95 @@ export default function SignInPage(props: SignInPageProps) {
                   type="password"
                   required
                   placeholder="••••••••"
-                  className="w-full pr-9 pl-3 py-2 text-xs rounded-lg border border-[#EAE1D3] focus:border-[#C8A96B] bg-[#FAF7F0]/40 font-mono"
+                  className="w-full pr-9 pl-3 py-2.5 text-xs rounded-xl border border-[#EAE1D3] focus:border-[#C8A96B] focus:outline-none bg-[#FAF7F0]/40 font-mono transition-colors"
                   dir="ltr"
                 />
               </div>
+              {activeTab === 'register' && (
+                <span className="text-[10px] text-[#918579] mt-1 block">
+                  6 خانات أو أكثر لحماية حسابك
+                </span>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-2.5 rounded-xl text-xs font-bold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              className="w-full py-3 rounded-xl text-xs font-bold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-all shadow-md cursor-pointer disabled:opacity-50"
             >
               {isPending
                 ? 'جاري التحقق...'
                 : activeTab === 'signin'
-                ? 'دخول إلى الحساب'
-                : 'إنشاء حساب جديد مجاناً'}
+                ? 'تسجيل الدخول إلى حسابي'
+                : 'إنشاء حسابي مجاناً والبدء الآن'}
             </button>
           </form>
 
-          {/* Privacy reassurance */}
+          {/* Switch tab link */}
+          <div className="text-center text-xs text-[#73675C]">
+            {activeTab === 'signin' ? (
+              <p>
+                ليس لديك حساب بعد؟{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('register')
+                    setFormError(null)
+                  }}
+                  className="text-[#A68648] hover:text-[#8c6f37] font-bold underline cursor-pointer"
+                >
+                  إنشاء حساب جديد مجاناً
+                </button>
+              </p>
+            ) : (
+              <p>
+                لديك حساب بالفعل؟{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('signin')
+                    setFormError(null)
+                  }}
+                  className="text-[#A68648] hover:text-[#8c6f37] font-bold underline cursor-pointer"
+                >
+                  تسجيل الدخول هنا
+                </button>
+              </p>
+            )}
+          </div>
+
+          {/* Inspiration / External Preview Box */}
+          <div className="p-3.5 rounded-xl bg-[#FAF7F0] border border-[#C8A96B]/30 space-y-2 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#332A25]">
+              <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
+              <span>تريد مشاهدة نموذج دعوة حي أولاً؟</span>
+            </div>
+            <p className="text-[11px] text-[#73675C] leading-relaxed">
+              شاهد دعوة زفاف كاملة بمؤثراتها الفاخرة وخريطتها وموسيقاها قبل التسجيل:
+            </p>
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <a
+                href="/wedding/mohamed-and-asmaa"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332A25] bg-white border border-[#C8A96B] hover:bg-[#FAF7F0] transition-colors shadow-xs"
+              >
+                <Eye className="w-3 h-3 text-[#C8A96B]" />
+                <span>معاينة دعوة حية ↗</span>
+              </a>
+              <Link
+                href="/templates"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium text-[#73675C] hover:text-[#332A25] transition-colors"
+              >
+                <span>تصفح القوالب (16 قالب)</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Security note */}
           <div className="pt-2 border-t border-[#EAE1D3] flex items-center justify-center gap-1.5 text-[10px] text-[#918579]">
             <Shield className="w-3.5 h-3.5 text-[#C8A96B]" />
-            <span>بياناتك ودعواتك في أمان تام وخاصة بك وحدك.</span>
+            <span>بياناتك ودعواتك مؤمنة ومشفرة تماماً وخاصة بك.</span>
           </div>
         </div>
       </main>
@@ -241,7 +332,10 @@ export default function SignInPage(props: SignInPageProps) {
       <footer className="py-4 text-center text-xs text-[#918579] flex flex-wrap items-center justify-center gap-3">
         <span>جميع الحقوق محفوظة © {new Date().getFullYear()} • منصة فرحة العمر</span>
         <span>•</span>
-        <Link href="/admin/login" className="text-[#A68648] hover:text-[#C8A96B] font-semibold transition-colors flex items-center gap-1">
+        <Link
+          href="/admin/login"
+          className="text-[#A68648] hover:text-[#C8A96B] font-semibold transition-colors flex items-center gap-1"
+        >
           <Shield className="w-3 h-3 text-[#C8A96B]" />
           <span>بوابة دخول الإدارة (Admin Portal)</span>
         </Link>

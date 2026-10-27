@@ -151,6 +151,33 @@ export default async function PublicWeddingPage({ params }: PageProps) {
     )
   }
 
+  // Suspended invitation screen
+  if (invitation && invitation.status === 'SUSPENDED') {
+    return (
+      <div dir="rtl" className="min-h-screen bg-[#1F1915] text-[#FAF7F0] flex items-center justify-center p-6 text-center font-sans-arabic">
+        <div className="max-w-md w-full p-8 rounded-2xl bg-[#2A221C] border border-[#C8A96B]/30 shadow-2xl space-y-4">
+          <div className="w-16 h-16 rounded-full mx-auto border border-red-500/30 bg-red-500/10 flex items-center justify-center text-2xl text-red-400">
+            ⛔
+          </div>
+          <h2 className="text-xl font-bold font-serif-luxury text-white">
+            الدعوة موقوفة مؤقتاً
+          </h2>
+          <p className="text-xs text-[#D1C7BD] leading-relaxed">
+            تم إيقاف هذه الدعوة مؤقتاً من قِبل إدارة المنصة. إذا كنت صاحب الدعوة يرجى مراجعة لوحة الإدارة أو التواصل مع الدعم الفني.
+          </p>
+          <div className="pt-2">
+            <a
+              href="/"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-xs font-semibold text-white bg-[#C8A96B] hover:bg-[#A68648] transition-colors shadow-md"
+            >
+              الذهاب إلى الصفحة الرئيسية
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Only published invitations are visible to the public
   if (!invitation || invitation.status !== 'PUBLISHED') {
     notFound()

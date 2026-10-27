@@ -48,7 +48,7 @@ export async function registerWithCredentialsAction(prevState: any, formData: Fo
   })
 
   if (existing) {
-    return { error: 'هذا البريد الإلكتروني مسجل بالفعل، يرجى تسجيل الدخول' }
+    return { error: 'هذا البريد الإلكتروني مسجل بالفعل، يرجى تسجيل الدخول مباشرة' }
   }
 
   const passwordHash = await bcrypt.hash(password, 12)
@@ -63,27 +63,6 @@ export async function registerWithCredentialsAction(prevState: any, formData: Fo
 
   await createSession(newUser.id)
 
-  const safeReturn = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/dashboard'
-  redirect(safeReturn)
-}
-
-export async function demoCustomerLoginAction(returnTo = '/dashboard') {
-  const demoEmail = 'guest@luxurywedding.com'
-  let user = await prisma.user.findUnique({ where: { email: demoEmail } })
-
-  if (!user) {
-    const passwordHash = await bcrypt.hash('DemoPassword2026!', 10)
-    user = await prisma.user.create({
-      data: {
-        email: demoEmail,
-        name: 'عميل تجريبي • Demo Client',
-        passwordHash,
-        role: 'USER',
-      },
-    })
-  }
-
-  await createSession(user.id)
   const safeReturn = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/dashboard'
   redirect(safeReturn)
 }
